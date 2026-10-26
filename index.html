@@ -18,11 +18,11 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#16151a; --surface:#1f1e25; --ink:#f1efec; --muted:#a19ca8; --line:#2f2d36;
-  --accent:#ff7a33; --accent-soft:#3a2418; --y25:#a7adbb; --y24:#4b4954;
+  --accent:#ff7a33; --accent-soft:#3a2418; --y25:#a7adbb; --y24:#6e6a78;
   --good:#4ade80; --bad:#fb923c; --gold:#d9ab2a; --silver:#8b919c; --bronze:#b97a4e; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#16151a; --surface:#1f1e25; --ink:#f1efec; --muted:#a19ca8; --line:#2f2d36;
-  --accent:#ff7a33; --accent-soft:#3a2418; --y25:#a7adbb; --y24:#4b4954;
+  --accent:#ff7a33; --accent-soft:#3a2418; --y25:#a7adbb; --y24:#6e6a78;
   --good:#4ade80; --bad:#fb923c; --gold:#d9ab2a; --silver:#8b919c; --bronze:#b97a4e; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
@@ -210,7 +210,8 @@ function render(){
   const A=css("--accent"),R=css("--y25"),R4=css("--y24"),M=css("--muted"),L=css("--line");
   const refColor=has?R:R4;
   const leg=(a)=>a.map(([c,t,dash])=>`<span><i style="background:${dash?"repeating-linear-gradient(90deg,"+c+" 0 4px,transparent 4px 7px)":c}"></i>${t}</span>`).join("");
-  document.getElementById("leg1").innerHTML=leg([[A,curY],[refColor,refY]]);
+  const extra24=has?[[R4,"2024",true]]:[];
+  document.getElementById("leg1").innerHTML=leg([[A,curY],[refColor,refY],...extra24]);
   const labels=D25.map((_,i)=>`${i+1}`);
   const base={responsive:true,maintainAspectRatio:false,animation:{duration:matchMedia("(prefers-reduced-motion: reduce)").matches?0:400},
     interaction:{mode:"index",intersect:false},
@@ -220,13 +221,14 @@ function render(){
   const bf={id:"bf",beforeDatasetsDraw(ch){const x=ch.scales.x.getPixelForValue(22),{top,bottom}=ch.chartArea,g=ch.ctx;g.save();g.fillStyle=css("--accent-soft");g.fillRect(x-10,top,20,bottom-top);g.fillStyle=M;g.font="600 10px IBM Plex Sans";g.textAlign="center";g.fillText("BLACK FRIDAY",x,top+10);g.restore()}};
   const ds=(lab,data,color,w,dash)=>({label:lab,data,borderColor:color,backgroundColor:color,borderWidth:w,pointRadius:0,pointHoverRadius:4,tension:.25,spanGaps:false,borderDash:dash||[]});
   c1&&c1.destroy();
-  c1=new Chart(document.getElementById("c1"),{type:"line",data:{labels,datasets:[ds(curY,cur,A,3),ds(refY,ref,refColor,2)]},options:base,plugins:[bf]});
+  c1=new Chart(document.getElementById("c1"),{type:"line",data:{labels,datasets:[ds(curY,cur,A,3),ds(refY,ref,refColor,2),...(has?[ds("2024",D24,R4,2,[6,4])]:[])]},options:base,plugins:[bf]});
 
   const cc=cum(cur), cr=cum(ref);
   const proj=Array(26).fill(null);
   if(has&&filled>0&&filled<26){const last=cur.map((v,i)=>v!=null?i:-1).filter(i=>i>=0).pop();proj[last]=cc[last];for(let i=last+1;i<26;i++)proj[i]=proj[i-1]+ref[i]*(1+diff)}
   const sets=[ds(curY,cc,A,3),ds(refY,cr,refColor,2)];
   const lg=[[A,curY],[refColor,refY]];
+  if(has){sets.push(ds("2024",cum(D24),R4,2,[6,4]));lg.push([R4,"2024",true])}
   if(proj.some(v=>v!=null)){sets.push(ds("Prognose",proj,A,2,[5,4]));lg.push([A,"Prognose",true])}
   document.getElementById("leg2").innerHTML=leg(lg);
   c2&&c2.destroy();
