@@ -208,7 +208,7 @@ function countdown(){
   const big=([d,h,m,s])=>`${d}<small>d</small>${String(h).padStart(2,"0")}<small>u</small>${String(m).padStart(2,"0")}<small>m</small>${String(s).padStart(2,"0")}<small>s</small>`;
   const day=Math.floor((new Date(n).setHours(0,0,0,0)-START)/864e5);
   const track=`<div class="track">${D25.map((_,i)=>`<span class="${i<day?"done":""}${i===day?" now":""}${i===BF?" bf":""}"></span>`).join("")}</div>`;
-  if(n<DEADLINE) el.innerHTML=`<div><div class="what">Voorspelling inleveren sluit over</div><div class="big">${big(parts(DEADLINE-n))}</div></div><div class="side">Lever je verwachte eindomzet in bij Kevin, Thijs of Noëlle, uiterlijk dinsdag 3 november om 23:59.</div>`;
+  if(n<DEADLINE) el.innerHTML=`<div><div class="what">Voorspelling inleveren sluit over</div><div class="big">${big(parts(DEADLINE-n))}</div></div><div class="side">Lever je verwachte eindomzet in bij Kevin of Thijs, uiterlijk dinsdag 3 november om 23:59.</div>`;
   else if(n<START) el.innerHTML=`<div><div class="what">De actie start over</div><div class="big">${big(parts(START-n))}</div></div><div class="side">Inleveren is gesloten. Donderdag 5 november gaat de teller lopen.</div>`;
   else if(day<26){const toBF=BF-day;el.innerHTML=`<div><div class="what">${dl(day)}</div><div class="big">Dag ${day+1}<small>van 26</small></div></div><div class="side">${toBF>0?`Nog <b>${toBF}</b> ${toBF===1?"dag":"dagen"} tot Black Friday (vr 27 nov)`:toBF===0?"<b>Vandaag is het Black Friday!</b>":`Nog <b>${25-day}</b> ${25-day===1?"dag":"dagen"} tot het einde van de actie`}</div>${track}`}
   else el.innerHTML=`<div><div class="what">Black Friday 2026</div><div class="big">Eindstand</div></div><div class="side">De actie is afgelopen. Bedankt allemaal!</div>`;
