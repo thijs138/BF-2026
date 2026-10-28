@@ -398,11 +398,11 @@ function render(data){
   const win=v=>{if(vals.length===1)return"altijd (enige voorspelling)";const i=vals.indexOf(v),l=i>0?(vals[i-1]+v)/2:null,h=i<vals.length-1?(v+vals[i+1])/2:null;
     return l==null?`onder ${kE(h)}`:h==null?`boven ${kE(l)}`:`${kE(l)} – ${kE(h)}`};
   const shared=v=>ev.filter(x=>x===v).length>1;
-  const gap=(v,o)=>o==null?`<span class="note">–</span>`:`<span class="${cls(v-o)}">${pct(v/o-1)}</span><br><span class="note">${v>=o?"+":"−"}${eur(Math.abs(v-o)).slice(2)}</span>`;
+  const gap=(v,o)=>o==null?"–":pct(v/o-1);
   if(!prog){
     tg.textContent="op volgorde van voorspelling";
     const srt=[...exp].sort((a,b)=>a[1]-b[1]);
-    bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th class="num">t.o.v. vorige</th><th class="num">t.o.v. volgende</th><th class="num">t.o.v. 2025</th><th>Wint als eindomzet</th></tr></thead><tbody>${srt.map(([n,v],i)=>`<tr><td>${esc(n)}</td><td class="num">${eur(v)}</td><td class="num">${gap(v,srt[i-1]?.[1])}</td><td class="num">${gap(v,srt[i+1]?.[1])}</td><td class="num ${cls(v/T25-1)}">${pct(v/T25-1)}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
+    bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil met vorige</th><th>Wint als eindomzet</th></tr></thead><tbody>${srt.map(([n,v],i)=>`<tr><td>${esc(n)}</td><td class="num">${eur(v)}</td><td class="num">${gap(v,srt[i-1]?.[1])}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
     return}
   tg.innerHTML=`vergeleken met ${filled===26?"eindomzet":"prognose"} ${eur(prog)}`;
   let pos=0,prev=null;
