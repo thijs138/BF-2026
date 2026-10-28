@@ -7,134 +7,166 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-/* Eén kolom: aftellen → kerncijfers → grafieken → mijlpalen/records → klassement. Oranje = 2026, leisteen = 2025, licht = 2024. */
+/* Scorebord: donkere kopband (stand + aftellen) → statistiekenmuur → twee grafieken naast elkaar → jaaroverzicht/mijlpalen/records → voorspellingen. Oranje = 2026, leisteen = 2025, licht = 2024. */
 :root{
-  --bg:#f7f6f4; --surface:#ffffff; --ink:#1c1b22; --muted:#6c6873; --line:#e4e1dc;
+  --bg:#f4f2ef; --surface:#ffffff; --ink:#1c1b22; --muted:#6c6873; --line:#e6e2dc; --soft:#f7f5f2;
+  --hero:#1c1a22; --hero-ink:#f6f1ea; --hero-muted:#a39cad; --hero-line:#34303e;
   --accent:#e8601c; --accent-soft:#fde6d8; --band:rgba(232,96,28,.10); --y25:#5b6170; --y24:#b3afa8;
   --good:#18794e; --good-soft:#dcf3e6; --bad:#c2410c; --gold:#f5c542; --silver:#cfd3da; --bronze:#e6a77a;
   --display:"Archivo",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#16151a; --surface:#1f1e25; --ink:#f1efec; --muted:#a19ca8; --line:#2f2d36;
+  --bg:#141318; --surface:#1d1b23; --ink:#f1efec; --muted:#a19ca8; --line:#2d2a35; --soft:#24212b;
+  --hero:#0d0c11; --hero-ink:#f6f1ea; --hero-muted:#9a93a8; --hero-line:#2a2733;
   --accent:#ff7a33; --accent-soft:#3a2418; --band:rgba(255,122,51,.13); --y25:#a7adbb; --y24:#6e6a78;
   --good:#4ade80; --good-soft:#163323; --bad:#fb923c; --gold:#d9ab2a; --silver:#8b919c; --bronze:#b97a4e; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#16151a; --surface:#1f1e25; --ink:#f1efec; --muted:#a19ca8; --line:#2f2d36;
+  --bg:#141318; --surface:#1d1b23; --ink:#f1efec; --muted:#a19ca8; --line:#2d2a35; --soft:#24212b;
+  --hero:#0d0c11; --hero-ink:#f6f1ea; --hero-muted:#9a93a8; --hero-line:#2a2733;
   --accent:#ff7a33; --accent-soft:#3a2418; --band:rgba(255,122,51,.13); --y25:#a7adbb; --y24:#6e6a78;
   --good:#4ade80; --good-soft:#163323; --bad:#fb923c; --gold:#d9ab2a; --silver:#8b919c; --bronze:#b97a4e; color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
-.wrap{max-width:1120px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:22px}
-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
-h1{font-family:var(--display);font-stretch:78%;font-weight:900;font-size:clamp(2.1rem,6vw,3.4rem);line-height:.95;margin:0;letter-spacing:-.01em;text-transform:uppercase}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+.wrap{max-width:1320px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+h1{font-family:var(--display);font-stretch:78%;font-weight:900;font-size:clamp(1.8rem,4.5vw,2.6rem);line-height:.95;margin:0;text-transform:uppercase}
 h1 span{color:var(--accent)}
-.sub{color:var(--muted);margin:6px 0 0;max-width:62ch}
-h2{font-family:var(--display);font-stretch:85%;font-weight:800;font-size:1.15rem;margin:0;text-transform:uppercase;letter-spacing:.02em}
-.live{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+h2{font-family:var(--display);font-stretch:85%;font-weight:800;font-size:1rem;margin:0;text-transform:uppercase;letter-spacing:.03em}
+.live{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--good);animation:pulse 2s infinite}
-.dot.off{background:var(--bad);animation:none}
-.dot.idle{background:var(--muted);animation:none}
+.dot.off{background:var(--bad);animation:none}.dot.idle{background:var(--muted);animation:none}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(24,121,78,.5)}70%{box-shadow:0 0 0 8px rgba(24,121,78,0)}100%{box-shadow:0 0 0 0 rgba(24,121,78,0)}}
 @media (prefers-reduced-motion:reduce){.dot{animation:none}}
 .tag{font:600 11px var(--body);text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:99px;background:var(--accent);color:#fff}
 
-/* aftellen */
-.count{background:var(--ink);color:var(--bg);border-radius:12px;padding:18px 22px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 28px}
-.count .what{font-size:13px;text-transform:uppercase;letter-spacing:.08em;opacity:.75}
-.count .big{font-family:var(--display);font-stretch:75%;font-weight:900;font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.05;font-variant-numeric:tabular-nums}
-.count .big small{font-size:.5em;font-weight:700;opacity:.7;margin:0 .35em 0 .1em}
-.count .side{font-size:14px;opacity:.85;max-width:44ch}
-.track{display:grid;grid-template-columns:repeat(26,1fr);gap:3px;width:100%}
-.track span{height:8px;border-radius:2px;background:rgba(127,127,127,.35)}
-.track span.done{background:var(--accent)}
+/* kopband */
+.hero{background:var(--hero);color:var(--hero-ink);border-radius:14px;padding:20px 22px;display:grid;grid-template-columns:1.25fr 1fr;gap:18px 32px}
+.hero .what{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--hero-muted);font-weight:600}
+.hero .big{font-family:var(--display);font-stretch:72%;font-weight:900;font-size:clamp(2.6rem,7vw,4.6rem);line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hero .big small{font-size:.42em;font-weight:700;color:var(--hero-muted);margin:0 .3em 0 .08em}
+.hero .row{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13.5px;color:var(--hero-muted);margin-top:6px}
+.hero .row b{color:var(--hero-ink);font-variant-numeric:tabular-nums}
+.hero .up{color:#4ade80}.hero .down{color:#fb923c}
+.right{display:grid;gap:10px;align-content:start}
+.cd{font-family:var(--display);font-stretch:75%;font-weight:900;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.05;font-variant-numeric:tabular-nums}
+.cd small{font-size:.5em;font-weight:700;color:var(--hero-muted);margin:0 .3em 0 .08em}
+.track{display:grid;grid-template-columns:repeat(26,1fr);gap:3px}
+.track span{height:9px;border-radius:2px;background:var(--hero-line)}
+.track span.done{background:var(--accent)}.track span.now{background:var(--gold)}
 .track span.bf{outline:2px solid var(--gold);outline-offset:1px}
-.track span.now{background:var(--gold)}
+.prog{position:relative;height:30px;margin:22px 0 12px}
+.prog .bar{position:absolute;inset:11px 0 auto 0;height:8px;border-radius:4px;background:var(--hero-line);overflow:hidden}
+.prog .fill{height:100%;background:var(--accent);border-radius:4px}
+.prog .ghost{position:absolute;top:0;height:100%;background:rgba(255,255,255,.18)}
+.mk{position:absolute;top:0;height:30px;border-left:2px solid var(--hero-muted);font-size:10.5px;color:var(--hero-muted);white-space:nowrap}
+.mk span{position:absolute;top:-17px;transform:translateX(-50%)}
+.mk.r span{transform:translateX(-100%)}
+.mk.lo span{top:auto;bottom:-15px}
+.mk.gold{border-color:var(--gold)}.mk.gold span{color:var(--gold)}
 
-/* gebeurtenis */
-.event{display:flex;gap:14px;align-items:center;background:var(--good-soft);border:1px solid var(--good);border-radius:10px;padding:12px 16px}
-.event b{font-family:var(--display);font-stretch:85%;font-size:1.15rem;text-transform:uppercase}
-.event .ic{font-family:var(--display);font-weight:900;font-size:1.6rem;color:var(--good);line-height:1}
+.event{display:flex;gap:12px;align-items:center;background:var(--good-soft);border:1px solid var(--good);border-radius:10px;padding:10px 14px}
+.event b{font-family:var(--display);font-stretch:85%;font-size:1.05rem;text-transform:uppercase}
+.event .ic{font-family:var(--display);font-weight:900;font-size:1.5rem;color:var(--good);line-height:1}
 
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:2px;align-content:start}
-.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.val{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:clamp(1.25rem,4.6vw,1.75rem);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.15}
-.note{font-size:12.5px;color:var(--muted)}
+/* statistiekenmuur */
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.st{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:1px;align-content:start;min-width:0}
+.st .l{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st .v{font-family:var(--display);font-stretch:78%;font-weight:800;font-size:1.45rem;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st .n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .up{color:var(--good)} .down{color:var(--bad)}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:12px;min-width:0;align-content:start}
-.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
-.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
-.legend i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
-.legend i.band{height:10px;background:var(--band);border:1px solid var(--accent)}
-.chartbox{position:relative;height:300px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.ms{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.ms li{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px;min-width:0;align-content:start}
+.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 10px}
+.note{font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.legend i.band{height:9px;background:var(--band);border:1px solid var(--accent)}
+.chartbox{position:relative;height:270px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px}
+.ms{list-style:none;margin:0;padding:0;display:grid}
+.ms li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
 .ms li:last-child{border-bottom:0}
-.ms .chk{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700}
+.ms .chk{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:10px;font-weight:700}
 .ms li.ok .chk{background:var(--good);border-color:var(--good);color:var(--surface)}
-.ms .r{font-family:var(--mono);font-size:12.5px;color:var(--muted);text-align:right}
+.ms .r{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right}
 .ms li.ok .r{color:var(--good)}
 .table-scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
-th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
-td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-td.num,th.num{text-align:right;font-family:var(--mono);font-size:13px}
-td.win{font-size:13px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:12px}
+tr.cur td{font-weight:600;background:var(--accent-soft)}
+tr.cur td:first-child{color:var(--accent)}
+td.win{font-size:12.5px;color:var(--muted)}
 tr.lead td.win{color:var(--ink);font-weight:600}
-.rank{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font-weight:600;font-size:12px;background:var(--bg)}
+.rank{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-weight:600;font-size:11.5px;background:var(--soft)}
 tr.p1 .rank{background:var(--gold);color:#1c1b22} tr.p2 .rank{background:var(--silver);color:#1c1b22} tr.p3 .rank{background:var(--bronze);color:#1c1b22}
 tr.p1 td,tr.p2 td,tr.p3 td{font-weight:600}
-.empty{color:var(--muted);font-size:14px;padding:8px 0;margin:0}
-details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:13.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--soft);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)}
+.chip b{display:block;color:var(--ink);font-family:var(--mono);font-size:13px}
+.strip{position:relative;height:84px;margin:6px 4px 0}
+.strip .axis{position:absolute;left:0;right:0;top:44px;height:2px;background:var(--line)}
+.strip .p{position:absolute;top:38px;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;background:var(--y25);border:2px solid var(--surface);opacity:.85}
+.strip .p.me{background:var(--accent);opacity:1}
+.strip .p.lead{background:var(--gold);opacity:1}
+.strip .m{position:absolute;top:16px;bottom:24px;border-left:2px dashed var(--muted);font-size:10.5px;color:var(--muted);white-space:nowrap}
+.strip .m span{position:absolute;top:-2px;left:4px}
+.strip .m.hi span{top:-16px}
+.strip .m.pg{border-left:2px solid var(--accent)}.strip .m.pg span{color:var(--accent);font-weight:600}
+.strip .t{position:absolute;bottom:0;font-family:var(--mono);font-size:10.5px;color:var(--muted);transform:translateX(-50%)}
+.empty{color:var(--muted);font-size:13px;padding:6px 0;margin:0}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--muted)}
 summary{cursor:pointer;font-weight:600;color:var(--ink)}
-.drop{margin-top:10px;border:1.5px dashed var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.drop{margin-top:8px;border:1.5px dashed var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
-.btn{font:600 14px var(--body);border:0;border-radius:6px;padding:8px 14px;background:var(--accent);color:#fff;cursor:pointer}
+.btn{font:600 13px var(--body);border:0;border-radius:6px;padding:7px 12px;background:var(--accent);color:#fff;cursor:pointer}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@media (max-width:820px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.chartbox{height:240px}}
+@media (max-width:1100px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.g3{grid-template-columns:1fr 1fr}.g3>:first-child{grid-column:1/-1}}
+@media (max-width:820px){.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.g2,.g3{grid-template-columns:1fr}.chartbox{height:230px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <h1>Black Friday <span>2026</span></h1>
-      <p class="sub">Omzet van 5 t/m 30 november (26 dagen), vergeleken met dezelfde dagen in 2025 en 2024. Dag 23 is Black Friday.</p>
-    </div>
+    <h1>Black Friday <span>2026</span></h1>
     <div class="live"><span class="tag" id="demo" hidden>Demo</span><span class="dot idle" id="dot"></span><span id="upd">Laden…</span></div>
   </header>
 
-  <section class="count" id="count"></section>
+  <section class="hero">
+    <div id="heroL"></div>
+    <div class="right" id="heroR"></div>
+  </section>
   <section id="event" hidden></section>
-  <section class="kpis" id="kpis"></section>
 
-  <section class="panel">
-    <div class="ph"><h2>Dagomzet</h2><div class="legend" id="leg1"></div></div>
-    <div class="chartbox"><canvas id="c1" aria-label="Lijngrafiek dagomzet"></canvas></div>
-  </section>
+  <section class="stats" id="stats"></section>
 
-  <section class="panel">
-    <div class="ph"><h2>Opgeteld</h2><div class="legend" id="leg2"></div></div>
-    <div class="chartbox"><canvas id="c2" aria-label="Lijngrafiek cumulatieve omzet"></canvas></div>
-  </section>
+  <div class="g2">
+    <section class="panel"><div class="ph"><h2>Dagomzet</h2><div class="legend" id="leg1"></div></div><div class="chartbox"><canvas id="c1" aria-label="Lijngrafiek dagomzet"></canvas></div></section>
+    <section class="panel"><div class="ph"><h2>Opgeteld</h2><div class="legend" id="leg2"></div></div><div class="chartbox"><canvas id="c2" aria-label="Lijngrafiek opgetelde omzet"></canvas></div></section>
+  </div>
 
-  <div class="grid2">
+  <div class="g3">
+    <section class="panel"><div class="ph"><h2>Jaaroverzicht</h2><span class="note">alle Black Fridays</span></div><div class="table-scroll" id="years"></div></section>
     <section class="panel"><div class="ph"><h2>Mijlpalen</h2><span class="note" id="msnote"></span></div><ul class="ms" id="ms"></ul></section>
-    <section class="panel"><div class="ph"><h2>Records</h2><span class="note">alle Black Fridays sinds 2022</span></div><ul class="ms" id="rec"></ul></section>
+    <section class="panel"><div class="ph"><h2>Records</h2><span class="note">sinds 2022</span></div><ul class="ms" id="rec"></ul></section>
   </div>
 
   <section class="panel">
-    <div class="ph"><h2>Klassement</h2><span class="note" id="target"></span></div>
+    <div class="ph"><h2>Voorspellingen &amp; klassement</h2><span class="note" id="target"></span></div>
+    <div class="chips" id="chips"></div>
+    <div class="strip" id="strip"></div>
     <div class="table-scroll" id="board"></div>
   </section>
 
   <details>
     <summary>Zo werkt het</summary>
-    <p>De pagina leest elke minuut het Google-spreadsheet "Black Friday 2026" uit: de dagomzet in kolom C van "Dagomzet 2026" en de namen en verwachtingen in kolom A en B van "Verwachtingen 2026".</p>
+    <p>De pagina leest elke minuut het Google-spreadsheet "Black Friday 2026" uit: de dagomzet in kolom C van "Dagomzet 2026" en de namen en voorspellingen in kolom A en B van "Verwachtingen 2026".</p>
     <p><b>Prognose</b> = omzet tot nu toe ÷ omzet 2025 over dezelfde dagen × eindtotaal 2025 (€ 1.595.732). Zo telt de Black Friday-piek mee.<br>
-    <b>Scenario's</b> laag (−1%), basis (+6%) en hoog (+14%) komen uit de omzetverwachting van een collega, op basis van adviseursomzet en metingen.<br>
+    <b>Scenario's</b> laag (−1%), basis (+6%) en hoog (+14%) komen uit de omzetverwachting van een collega.<br>
     <b>Klassement:</b> wie het dichtst bij de eindomzet zit wint. Tijdens de actie wordt de prognose gebruikt. "Wint als" laat zien bij welke eindomzet iemand op 1 eindigt.</p>
     <p>Lukt het ophalen niet? Download het spreadsheet als .xlsx en sleep het hieronder naartoe.</p>
     <label class="drop" id="drop" for="file"><span>Sleep een .xlsx of .csv hierheen of kies een bestand.</span><span><span class="btn">Bestand kiezen</span> <button type="button" class="btn ghost" id="reset" hidden>Terug naar live</button></span><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></label>
@@ -147,8 +179,7 @@ summary{cursor:pointer;font-weight:600;color:var(--ink)}
 /* ===== Instellingen ===== */
 const P=new URLSearchParams(location.search);
 const SHEET_ID=P.get("sheet")||"1-dHVMz2-ng1Gg8-qflOM7fA1qLpi-HETDhkOqJMHst0";
-const REFRESH=60;
-const DEMO=P.has("demo");
+const REFRESH=60, DEMO=P.has("demo");
 const DEADLINE=new Date(2026,10,3,23,59,59), START=new Date(2026,10,5), BF=22;
 
 /* ===== Referentiedata ===== */
@@ -161,16 +192,21 @@ const sum=a=>a.reduce((s,v)=>s+(v||0),0);
 const cum=a=>{let s=0;return a.map(v=>v==null?null:(s+=v))};
 const T25=sum(D25), T24=sum(D24), C25=cum(D25), C24=cum(D24);
 const scen=k=>D25.map(v=>v*(1+SCEN[k]));
+const TB=T25*(1+SCEN.basis), TH=T25*(1+SCEN.hoog), TL=T25*(1+SCEN.laag);
 
 /* ===== Hulpjes ===== */
-const eur=v=>v==null||!isFinite(v)?"–":"€ "+Math.round(v).toLocaleString("nl-NL");
+const eur=v=>v==null||!isFinite(v)?"–":(v<0?"−":"")+"€ "+Math.round(Math.abs(v)).toLocaleString("nl-NL");
 const mln=v=>"€ "+(v/1e6).toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2})+" mln";
+const kE=v=>"€ "+Math.round(v/1000).toLocaleString("nl-NL")+"k";
 const pct=v=>v==null||!isFinite(v)?"–":(v>=0?"+":"−")+Math.abs(v*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
+const pc0=v=>(v*100).toLocaleString("nl-NL",{maximumFractionDigits:0})+"%";
+const cls=v=>v==null?"":v>=0?"up":"down";
 const dl=i=>new Date(2026,10,5+i).toLocaleDateString("nl-NL",{weekday:"short",day:"numeric",month:"short"}).replace(/\./g,"");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function num(v){if(v==null||v==="")return null;if(typeof v==="number")return v;let s=String(v).replace(/[€\s ]/g,"");if(!s)return null;if(s.includes(",")&&s.includes("."))s=s.lastIndexOf(",")>s.lastIndexOf(".")?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,"");else if(s.includes(","))s=s.replace(",",".");else if(/^-?\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");const n=parseFloat(s);return isNaN(n)?null:n}
 const now=()=>DEMO?new Date(2026,10,18,14,5):new Date();
+const median=a=>{const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length?(s.length%2?s[m]:(s[m-1]+s[m])/2):null};
 
 /* ===== Google Sheets ophalen (JSONP) ===== */
 let seq=0;
@@ -194,135 +230,194 @@ function demoData(){
 }
 
 /* ===== Bestand (reserve) ===== */
-function parseRows(rows,re){for(let r=0;r<Math.min(rows.length,15);r++){const c=(rows[r]||[]).findIndex(x=>re.test(String(x??"").trim()));if(c>=0)return[r,c]}return null}
+function findH(rows,re){for(let r=0;r<Math.min(rows.length,15);r++){const c=(rows[r]||[]).findIndex(x=>re.test(String(x??"").trim()));if(c>=0)return[r,c]}return null}
 function readFile(f){return new Promise((ok,fail)=>{const rd=new FileReader();rd.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});let d26=null,exp=null;
   for(const n of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null});
-    const h=parseRows(rows,/^omzet\s*2026$/i);if(h&&!d26){d26=Array(26).fill(null);let i=0;for(let r=h[0]+1;r<rows.length&&i<26;r++){const lab=String(rows[r]?.[0]??"");if(/totaal/i.test(lab))break;const m=lab.match(/(\d+)/);d26[m?+m[1]-1:i]=num(rows[r][h[1]]);i++}}
-    const e=parseRows(rows,/^verwachting$/i);if(e&&!exp){exp=[];for(let r=e[0]+1;r<rows.length;r++){const n=String(rows[r]?.[e[1]-1]??"").trim(),v=num(rows[r]?.[e[1]]);if(n&&v)exp.push([n,v])}}}
+    const h=findH(rows,/^omzet\s*2026$/i);if(h&&!d26){d26=Array(26).fill(null);let i=0;for(let r=h[0]+1;r<rows.length&&i<26;r++){const lab=String(rows[r]?.[0]??"");if(/totaal/i.test(lab))break;const m=lab.match(/(\d+)/);d26[m?+m[1]-1:i]=num(rows[r][h[1]]);i++}}
+    const e=findH(rows,/^verwachting$/i);if(e&&!exp){exp=[];for(let r=e[0]+1;r<rows.length;r++){const n=String(rows[r]?.[e[1]-1]??"").trim(),v=num(rows[r]?.[e[1]]);if(n&&v)exp.push([n,v])}}}
   d26?ok({d26,exp:exp||[]}):fail(new Error("geen kolom Omzet 2026"))}catch(err){fail(err)}};rd.readAsArrayBuffer(f)})}
 
-/* ===== Aftellen (6) ===== */
+/* ===== Kopband rechts: aftellen ===== */
 function countdown(){
-  const n=now(), el=document.getElementById("count");
+  const n=now(), el=document.getElementById("heroR");
   const parts=ms=>{const s=Math.max(0,Math.floor(ms/1000));return[Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60]};
   const big=([d,h,m,s])=>`${d}<small>d</small>${String(h).padStart(2,"0")}<small>u</small>${String(m).padStart(2,"0")}<small>m</small>${String(s).padStart(2,"0")}<small>s</small>`;
   const day=Math.floor((new Date(n).setHours(0,0,0,0)-START)/864e5);
-  const track=`<div class="track">${D25.map((_,i)=>`<span class="${i<day?"done":""}${i===day?" now":""}${i===BF?" bf":""}"></span>`).join("")}</div>`;
-  if(n<DEADLINE) el.innerHTML=`<div><div class="what">Voorspelling inleveren sluit over</div><div class="big">${big(parts(DEADLINE-n))}</div></div><div class="side">Lever je verwachte eindomzet in bij Kevin of Thijs, uiterlijk dinsdag 3 november om 23:59.</div>`;
-  else if(n<START) el.innerHTML=`<div><div class="what">De actie start over</div><div class="big">${big(parts(START-n))}</div></div><div class="side">Inleveren is gesloten. Donderdag 5 november gaat de teller lopen.</div>`;
-  else if(day<26){const toBF=BF-day;el.innerHTML=`<div><div class="what">${dl(day)}</div><div class="big">Dag ${day+1}<small>van 26</small></div></div><div class="side">${toBF>0?`Nog <b>${toBF}</b> ${toBF===1?"dag":"dagen"} tot Black Friday (vr 27 nov)`:toBF===0?"<b>Vandaag is het Black Friday!</b>":`Nog <b>${25-day}</b> ${25-day===1?"dag":"dagen"} tot het einde van de actie`}</div>${track}`}
-  else el.innerHTML=`<div><div class="what">Black Friday 2026</div><div class="big">Eindstand</div></div><div class="side">De actie is afgelopen. Bedankt allemaal!</div>`;
+  const track=`<div class="track">${D25.map((_,i)=>`<span class="${i<day?"done":""}${i===day?" now":""}${i===BF?" bf":""}" title="Dag ${i+1} · ${dl(i)}"></span>`).join("")}</div>`;
+  let h;
+  if(n<DEADLINE)h=`<div class="what">Voorspelling inleveren sluit over</div><div class="cd">${big(parts(DEADLINE-n))}</div><div class="row">Uiterlijk di 3 nov 23:59 bij Kevin, Thijs of Noëlle</div>`;
+  else if(n<START)h=`<div class="what">De actie start over</div><div class="cd">${big(parts(START-n))}</div><div class="row">Inleveren gesloten · start do 5 nov</div>`;
+  else if(day<26){const toBF=BF-day;h=`<div class="what">${dl(day)}</div><div class="cd">Dag ${day+1}<small>van 26</small></div><div class="row"><span>${toBF>0?`Nog <b>${toBF}</b> ${toBF===1?"dag":"dagen"} tot Black Friday`:toBF===0?"<b>Vandaag is het Black Friday!</b>":`Nog <b>${25-day}</b> ${25-day===1?"dag":"dagen"} tot het einde`} · nog <b>${25-day}</b> na vandaag</span></div>`}
+  else h=`<div class="what">Black Friday 2026</div><div class="cd">Eindstand</div><div class="row">De actie is afgelopen. Bedankt allemaal!</div>`;
+  el.innerHTML=h+track;
 }
 
 /* ===== Render ===== */
 let c1,c2,lastData=null;
 function render(data){
   lastData=data;
-  const d26=data.d26, filled=d26.filter(v=>v!=null).length, last=d26.reduce((a,v,i)=>v!=null?i:a,-1);
-  const has=filled>0, total=sum(d26), C26=cum(d26);
-  const same25=D25.reduce((a,v,i)=>a+(d26[i]!=null?v:0),0);
+  const d26=data.d26, idx=d26.map((v,i)=>v!=null?i:-1).filter(i=>i>=0);
+  const filled=idx.length, last=filled?idx[filled-1]:-1, has=filled>0;
+  const total=sum(d26), C26=cum(d26);
+  const same25=sum(idx.map(i=>D25[i])), same24=sum(idx.map(i=>D24[i]));
   const growth=same25?total/same25-1:null;
   const prog=filled===26?total:(same25?total/same25*T25:null);
-  const basisSame=same25*(1+SCEN.basis);
+  const exp=(data.exp||[]).filter(e=>e[0]&&e[1]&&e[1]>0);
+  const ev=exp.map(e=>e[1]);
 
-  // kerncijfers
-  const best=d26.reduce((a,v,i)=>v!=null&&(a<0||v>d26[a])?i:a,-1);
-  const k=has?[
-    ["Omzet 2026",eur(total),`na ${filled} van 26 dagen`],
-    ["T.o.v. 2025",`<span class="${growth>=0?"up":"down"}">${pct(growth)}</span>`,`zelfde dagen 2025: ${eur(same25)}`],
-    [filled<26?"Prognose eindtotaal":"Eindtotaal",eur(prog),`2025: ${eur(T25)} · 2024: ${eur(T24)}`],
-    ["T.o.v. basisscenario",`<span class="${total>=basisSame?"up":"down"}">${pct(total/basisSame-1)}</span>`,`beste dag: ${eur(d26[best])} (${dl(best)})`]
-  ]:[
-    ["Eindtotaal 2025",eur(T25),"26 dagen, 6 nov t/m 1 dec 2025"],
-    ["Eindtotaal 2024",eur(T24),"26 dagen"],
-    ["Basisscenario 2026",eur(T25*(1+SCEN.basis)),`laag ${mln(T25*(1+SCEN.laag))} · hoog ${mln(T25*(1+SCEN.hoog))}`],
-    ["Dagrecord",eur(162992.65),"Black Friday 2025 (28 nov)"]
-  ];
-  document.getElementById("kpis").innerHTML=k.map(([l,v,n])=>`<div class="kpi"><span class="lbl">${l}</span><span class="val">${v}</span><span class="note">${n}</span></div>`).join("");
+  /* --- kopband links --- */
+  const hl=document.getElementById("heroL");
+  const scale=Math.max(TH,prog||0,total)*1.04, X=v=>Math.min(100,v/scale*100);
+  let mki=0;const mk=(v,lab,c="")=>`<div class="mk ${c}${X(v)>85?" r":""}${(mki++)%2?" lo":""}" style="left:${X(v)}%"><span>${lab}</span></div>`;
+  if(has){
+    hl.innerHTML=`<div class="what">Omzet tot nu toe · ${filled} van 26 dagen</div><div class="big">${eur(total)}</div>
+      <div class="row"><span>t.o.v. 2025 <b class="${cls(growth)}">${pct(growth)}</b></span><span>t.o.v. 2024 <b class="${cls(total/same24-1)}">${pct(total/same24-1)}</b></span><span>${filled===26?"eindtotaal":"prognose"} <b>${eur(prog)}</b></span></div>
+      <div class="prog"><div class="bar"><div class="fill" style="width:${X(total)}%"></div>${prog&&filled<26?`<div class="ghost" style="left:${X(total)}%;width:${X(prog)-X(total)}%"></div>`:""}</div>${mk(T25,"2025")}${mk(TB,"basis")}${mk(TH,"hoog","gold")}</div>`;
+  }else{
+    hl.innerHTML=`<div class="what">Te verslaan · eindtotaal 2025</div><div class="big">${eur(T25)}</div>
+      <div class="row"><span>2024 <b>${eur(T24)}</b></span><span>basisscenario 2026 <b>${eur(TB)}</b></span><span>${exp.length} ${exp.length===1?"voorspelling":"voorspellingen"} binnen</span></div>
+      <div class="prog"><div class="bar"></div>${mk(TL,"laag")}${mk(T25,"2025")}${mk(TB,"basis")}${mk(TH,"hoog","gold")}</div>`;
+  }
 
-  // grafieken
+  /* --- statistiekenmuur --- */
+  const best=has?idx.reduce((a,i)=>d26[i]>d26[a]?i:a,idx[0]):-1, worst=has?idx.reduce((a,i)=>d26[i]<d26[a]?i:a,idx[0]):-1;
+  const better=idx.filter(i=>d26[i]>D25[i]).length;
+  const l7=idx.slice(-7), s7=sum(l7.map(i=>d26[i])), s7o=sum(l7.map(i=>D25[i]));
+  const left=26-filled, rest25=has?T25-C25[last]:T25;
+  const need=(t)=>left>0?Math.max(0,t-total)/left:null;
+  const bfExp=d26[BF]!=null?d26[BF]:D25[BF]*(1+(growth??SCEN.basis));
+  const avgExp=ev.length?sum(ev)/ev.length:null, medExp=median(ev);
+  const ranked=prog?exp.map(([n,v])=>({n,v,d:v-prog})).sort((a,b)=>Math.abs(a.d)-Math.abs(b.d)):[];
+  const S=(l,v,n)=>`<div class="st"><span class="l">${l}</span><span class="v">${v}</span><span class="n">${n}</span></div>`;
+  let tiles;
+  if(has)tiles=[
+    S(`Laatste dag · ${dl(last)}`,eur(d26[last]),`<span class="${cls(d26[last]/D25[last]-1)}">${pct(d26[last]/D25[last]-1)}</span> vs ${eur(D25[last])}`),
+    S("Gemiddeld per dag",eur(total/filled),`2025: ${eur(same25/filled)} · <span class="${cls(growth)}">${pct(growth)}</span>`),
+    S("Laatste 7 dagen",eur(s7),`<span class="${cls(s7/s7o-1)}">${pct(s7/s7o-1)}</span> vs 2025`),
+    S("Beste dag",eur(d26[best]),`dag ${best+1} · ${dl(best)}`),
+    S("Zwakste dag",eur(d26[worst]),`dag ${worst+1} · ${dl(worst)}`),
+    S("Dagen beter dan 2025",`${better} / ${filled}`,`${pc0(better/filled)} van de dagen`),
+    S("Bereikt van 2025-totaal",pc0(total/T25),`2025 stond toen op ${pc0(C25[last]/T25)}`),
+    S("Nodig/dag voor 2025",left?eur(need(T25)):"–",left?`2025 deed nog ${eur(rest25/left)} per dag`:"actie afgelopen"),
+    S("Nodig/dag voor basis",left?eur(need(TB)):"–",`basisscenario ${mln(TB)}`),
+    S(d26[BF]!=null?"Black Friday 2026":"Verwacht op Black Friday",eur(bfExp),`2025: ${eur(D25[BF])}`),
+    S("T.o.v. basisscenario",`<span class="${cls(total/(same25*(1+SCEN.basis))-1)}">${pct(total/(same25*(1+SCEN.basis))-1)}</span>`,`prognose ${pct(prog/TB-1)} vs basis`),
+    S("Koploper",ranked[0]?esc(ranked[0].n):"–",ranked[0]?`zit ${eur(Math.abs(ranked[0].d))} ${ranked[0].d>=0?"boven":"onder"} prognose`:"nog geen voorspellingen")];
+  else tiles=[
+    S("Gemiddeld per dag 2025",eur(T25/26),"over 26 dagen"),
+    S("Eerste week 2025",eur(C25[6]),`${pc0(C25[6]/T25)} van het totaal`),
+    S("Black Friday 2025",eur(D25[BF]),`${pc0(D25[BF]/T25)} van het totaal`),
+    S("Beste startdag",eur(D25[0]),"dag 1 in 2025"),
+    S("Groei 2024 → 2025",pct(T25/T24-1),"vrijwel gelijk"),
+    S("Laatste week 2025",eur(sum(D25.slice(19))),"dag 20 t/m 26"),
+    S("Scenario laag",eur(TL),pct(SCEN.laag)+" t.o.v. 2025"),
+    S("Scenario basis",eur(TB),pct(SCEN.basis)+" t.o.v. 2025"),
+    S("Scenario hoog",eur(TH),pct(SCEN.hoog)+" t.o.v. 2025"),
+    S("Voorspellingen",String(exp.length),ev.length?`gemiddeld ${mln(avgExp)}`:"nog niemand"),
+    S("Mediaan",medExp?eur(medExp):"–",medExp?`${pct(medExp/T25-1)} t.o.v. 2025`:"–"),
+    S("Laagste – hoogste",ev.length?`${(Math.min(...ev)/1e6).toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2})}–${(Math.max(...ev)/1e6).toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2})} mln`:"–",ev.length?`spreiding ${kE(Math.max(...ev)-Math.min(...ev))}`:"–")];
+  document.getElementById("stats").innerHTML=tiles.join("");
+
+  /* --- grafieken --- */
   const A=css("--accent"),Y5=css("--y25"),Y4=css("--y24"),M=css("--muted"),L=css("--line"),B=css("--band");
   const ds=(label,d,c,w,dash,extra)=>Object.assign({label,data:d,borderColor:c,backgroundColor:c,borderWidth:w,borderDash:dash||[],pointRadius:0,pointHoverRadius:4,tension:.25,spanGaps:false},extra||{});
   const leg=a=>a.map(([c,t,s])=>`<span><i class="${s==="band"?"band":""}" style="${s==="band"?"":`background:${s?`repeating-linear-gradient(90deg,${c} 0 4px,transparent 4px 7px)`:c}`}"></i>${t}</span>`).join("");
-  const bfPlug={id:"bf",beforeDatasetsDraw(ch){const x=ch.scales.x.getPixelForValue(BF),{top,bottom}=ch.chartArea,g=ch.ctx;g.save();g.fillStyle=css("--accent-soft");g.fillRect(x-10,top,20,bottom-top);g.fillStyle=M;g.font='600 10px "IBM Plex Sans",sans-serif';g.textAlign="center";g.fillText("BLACK FRIDAY",x,top+10);g.restore()}};
-  const opts=(fmt)=>({responsive:true,maintainAspectRatio:false,animation:{duration:matchMedia("(prefers-reduced-motion: reduce)").matches?0:400},interaction:{mode:"index",intersect:false},
-    plugins:{legend:{display:false},tooltip:{filter:i=>i.raw!=null,callbacks:{title:it=>`Dag ${it[0].dataIndex+1} · ${dl(it[0].dataIndex)}`,label:c=>`${c.dataset.label}: ${eur(c.parsed.y)}`}}},
-    scales:{x:{grid:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:11},maxRotation:0}},y:{grid:{color:L},border:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:11},callback:fmt}}}});
+  const bfPlug={id:"bf",beforeDatasetsDraw(ch){const x=ch.scales.x.getPixelForValue(BF),{top,bottom}=ch.chartArea,g=ch.ctx;g.save();g.fillStyle=css("--accent-soft");g.fillRect(x-9,top,18,bottom-top);g.fillStyle=M;g.font='600 10px "IBM Plex Sans",sans-serif';g.textAlign="center";g.fillText("BLACK FRIDAY",x,top+10);g.restore()}};
+  const opts=fmt=>({responsive:true,maintainAspectRatio:false,animation:{duration:matchMedia("(prefers-reduced-motion: reduce)").matches?0:400},interaction:{mode:"index",intersect:false},
+    plugins:{legend:{display:false},tooltip:{filter:i=>i.raw!=null&&i.dataset.label.indexOf("Scenario")!==0,callbacks:{title:it=>`Dag ${it[0].dataIndex+1} · ${dl(it[0].dataIndex)}`,label:c=>`${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+    scales:{x:{grid:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:10},maxRotation:0,autoSkip:true}},y:{grid:{color:L},border:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:10},callback:fmt}}}});
   const labels=D25.map((_,i)=>String(i+1));
-  document.getElementById("leg1").innerHTML=leg([[A,"2026"],[Y5,"2025"],[Y4,"2024",1],[A,"Basisscenario",1]]);
-  const s1=[ds("2026",d26,A,3),ds("2025",D25,Y5,2),ds("2024",D24,Y4,2,[6,4]),ds("Basisscenario",scen("basis"),A,1.5,[2,4])];
+  document.getElementById("leg1").innerHTML=leg([[A,"2026"],[Y5,"2025"],[Y4,"2024",1],[A,"Basis",1]]);
+  const s1=[ds("2026",d26,A,3,null,{pointRadius:d26.map((_,i)=>i===last?4:0)}),ds("2025",D25,Y5,2),ds("2024",D24,Y4,2,[6,4]),ds("Basisscenario",scen("basis"),A,1.5,[2,4])];
   const proj=Array(26).fill(null);
   if(has&&filled<26){proj[last]=C26[last];for(let i=last+1;i<26;i++)proj[i]=proj[i-1]+D25[i]*(1+growth)}
   const s2=[ds("Scenario laag",cum(scen("laag")),"transparent",0),ds("Scenario hoog",cum(scen("hoog")),"transparent",0,null,{fill:"-1",backgroundColor:B}),
-    ds("2026",C26,A,3),ds("Prognose",proj,A,2,[6,4]),ds("2025",C25,Y5,2),ds("2024",C24,Y4,2,[6,4])];
-  document.getElementById("leg2").innerHTML=leg([[A,"2026"],[A,"Prognose",1],[Y5,"2025"],[Y4,"2024",1],[A,"Scenario laag–hoog","band"]]);
+    ds("2026",C26,A,3,null,{pointRadius:d26.map((_,i)=>i===last?4:0)}),ds("Prognose",proj,A,2,[6,4]),ds("2025",C25,Y5,2),ds("2024",C24,Y4,2,[6,4])];
+  document.getElementById("leg2").innerHTML=leg([[A,"2026"],[A,"Prognose",1],[Y5,"2025"],[Y4,"2024",1],[A,"Laag–hoog","band"]]);
   const fK=v=>"€ "+(v/1000).toLocaleString("nl-NL")+"k", fM=v=>"€ "+(v/1e6).toLocaleString("nl-NL",{maximumFractionDigits:1})+" mln";
   if(!c1){c1=new Chart(document.getElementById("c1"),{type:"line",data:{labels,datasets:s1},options:opts(fK),plugins:[bfPlug]});
           c2=new Chart(document.getElementById("c2"),{type:"line",data:{labels,datasets:s2},options:opts(fM),plugins:[bfPlug]})}
-  else{c1.data.datasets.forEach((d,i)=>d.data=s1[i].data);c2.data.datasets.forEach((d,i)=>d.data=s2[i].data);c1.update();c2.update()}
+  else{c1.data.datasets.forEach((d,i)=>{d.data=s1[i].data;if(s1[i].pointRadius)d.pointRadius=s1[i].pointRadius});c2.data.datasets.forEach((d,i)=>{d.data=s2[i].data;if(s2[i].pointRadius)d.pointRadius=s2[i].pointRadius});c1.update();c2.update()}
 
-  // mijlpalen (5)
+  /* --- jaaroverzicht --- */
+  const YRS=[["2022",D22],["2023",D23],["2024",D24],["2025",D25]];
+  let prevAvg=null;
+  const yrow=YRS.map(([y,a])=>{const t=sum(a),avg=t/a.length,g=prevAvg?avg/prevAvg-1:null;prevAvg=avg;
+    return `<tr><td>${y}</td><td class="num">${a.length}</td><td class="num">${eur(t)}</td><td class="num">${eur(avg)}</td><td class="num">${eur(Math.max(...a))}</td><td class="num ${cls(g)}">${g==null?"–":pct(g)}</td></tr>`});
+  const a26=has?total/filled:null;
+  yrow.push(`<tr class="cur"><td>2026</td><td class="num">${has?`${filled}/26`:"26"}</td><td class="num">${has?eur(total):"–"}</td><td class="num">${has?eur(a26):"–"}</td><td class="num">${has?eur(d26[best]):"–"}</td><td class="num ${cls(has?a26/(same25/filled)-1:null)}">${has?pct(a26/(same25/filled)-1):"–"}</td></tr>`);
+  if(has&&filled<26)yrow.push(`<tr><td colspan="2" class="note">2026 prognose</td><td class="num">${eur(prog)}</td><td class="num">${eur(prog/26)}</td><td></td><td class="num ${cls(prog/T25-1)}">${pct(prog/T25-1)}</td></tr>`);
+  document.getElementById("years").innerHTML=`<table><thead><tr><th>Jaar</th><th class="num">Dagen</th><th class="num">Omzet</th><th class="num">Per dag</th><th class="num">Beste dag</th><th class="num">Groei/dag</th></tr></thead><tbody>${yrow.join("")}</tbody></table>`;
+
+  /* --- mijlpalen --- */
   const reach=(c,t)=>{const i=c.findIndex(v=>v!=null&&v>=t);return i<0?null:i};
   const MS=[[250000,"€ 250.000"],[500000,"€ 500.000"],[750000,"€ 750.000"],[1e6,"€ 1 miljoen"],[1.25e6,"€ 1,25 miljoen"],[1.5e6,"€ 1,5 miljoen"],
-    [T24,"Totaal 2024 voorbij"],[T25,"Totaal 2025 voorbij"],[T25*(1+SCEN.basis),"Basisscenario gehaald"],[T25*(1+SCEN.hoog),"Hoog scenario gehaald"]];
+    [T24,"Totaal 2024 voorbij"],[T25,"Totaal 2025 voorbij"],[TB,"Basisscenario"],[TH,"Hoog scenario"]];
   const events=[];
   document.getElementById("ms").innerHTML=MS.map(([t,lab])=>{const i=reach(C26,t),j=reach(C25,t);let r;
-    if(i!=null){const diff=j==null?null:j-i;r=`dag ${i+1}${diff==null?"":diff>0?` · ${diff} ${diff===1?"dag":"dagen"} eerder dan 2025`:diff<0?` · ${-diff} ${diff===-1?"dag":"dagen"} later dan 2025`:" · net als 2025"}`;if(i===last)events.push(`Mijlpaal: ${lab}`)}
-    else r=has?`nog ${eur(t-total)}`:(j==null?"2025: niet gehaald":`2025: dag ${j+1}`);
+    if(i!=null){const d=j==null?null:j-i;r=`dag ${i+1}${d==null?"":d>0?` · ${d}d eerder`:d<0?` · ${-d}d later`:" · = 2025"}`;if(i===last)events.push(`Mijlpaal: ${lab}`)}
+    else r=has?`nog ${eur(t-total)}`:(j==null?"2025: –":`2025: dag ${j+1}`);
     return `<li class="${i!=null?"ok":""}"><span class="chk">${i!=null?"✓":""}</span><span>${lab}</span><span class="r">${r}</span></li>`}).join("");
-  document.getElementById("msnote").textContent=has?"":"vorig jaar ter vergelijking";
+  document.getElementById("msnote").textContent=has?"vs 2025":"wanneer in 2025";
 
-  // records (5)
-  const best26=best>=0?d26[best]:null;
-  const YRS=[["2022",D22],["2023",D23],["2024",D24],["2025",D25]];
+  /* --- records --- */
   const top=f=>YRS.map(([y,a])=>[y,f(a)]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1])[0];
   const T7=a=>a.length>=7?sum(a.slice(0,7)):null;
   const rMax=top(a=>Math.max(...a)),rFirst=top(a=>a[0]),r7=top(T7),rAvg=top(a=>sum(a)/a.length);
   const recs=[
-    ["Hoogste dagomzet ooit",rMax[1],best26,`${eur(rMax[1])} op Black Friday ${rMax[0]}`],
-    ["Beste startdag (dag 1)",rFirst[1],d26[0],`${eur(rFirst[1])} in ${rFirst[0]}`],
-    ["Beste eerste week (7 dagen)",r7[1],filled>=7&&d26.slice(0,7).every(v=>v!=null)?T7(d26):null,`${eur(r7[1])} in ${r7[0]}`],
-    ["Hoogste gemiddelde per dag",rAvg[1],has?total/filled:null,`${eur(rAvg[1])} in ${rAvg[0]}`]
-  ];
-  document.getElementById("rec").innerHTML=recs.map(([lab,old,cur,txt])=>{const beat=cur!=null&&cur>old;if(beat&&lab.startsWith("Hoogste dagomzet")&&best===last)events.unshift(`Nieuw dagrecord: ${eur(cur)}!`);if(beat&&lab.startsWith("Beste startdag")&&last===0)events.unshift(`Beste startdag ooit: ${eur(cur)}!`);
+    ["Hoogste dagomzet",rMax[1],has?d26[best]:null,`${eur(rMax[1])} · BF ${rMax[0]}`],
+    ["Beste startdag",rFirst[1],d26[0],`${eur(rFirst[1])} · ${rFirst[0]}`],
+    ["Beste eerste week",r7[1],d26.slice(0,7).every(v=>v!=null)?T7(d26):null,`${eur(r7[1])} · ${r7[0]}`],
+    ["Hoogste daggemiddelde",rAvg[1],has?total/filled:null,`${eur(rAvg[1])} · ${rAvg[0]}`],
+    ["Hoogste totaal (26 dagen)",Math.max(T24,T25),filled===26?total:null,`${eur(Math.max(T24,T25))} · 2025`]];
+  document.getElementById("rec").innerHTML=recs.map(([lab,old,cur,txt])=>{const beat=cur!=null&&cur>old;
+    if(beat&&lab==="Hoogste dagomzet"&&best===last)events.unshift(`Nieuw dagrecord: ${eur(cur)}!`);
+    if(beat&&lab==="Beste startdag"&&last===0)events.unshift(`Beste startdag ooit: ${eur(cur)}!`);
     return `<li class="${beat?"ok":""}"><span class="chk">${beat?"✓":""}</span><span>${lab}</span><span class="r">${beat?`2026: ${eur(cur)}`:txt}</span></li>`}).join("");
-  const ev=document.getElementById("event");
-  if(events.length){ev.hidden=false;ev.innerHTML=`<div class="event"><span class="ic">★</span><div><b>${esc(events[0])}</b>${events.length>1?`<div class="note">${events.slice(1).map(esc).join(" · ")}</div>`:""}<div class="note">behaald op ${dl(last)}</div></div></div>`}else ev.hidden=true;
+  const evEl=document.getElementById("event");
+  if(events.length){evEl.hidden=false;evEl.innerHTML=`<div class="event"><span class="ic">★</span><div><b>${esc(events[0])}</b>${events.length>1?`<div class="note">${events.slice(1).map(esc).join(" · ")}</div>`:""}<div class="note">behaald op ${dl(last)}</div></div></div>`}else evEl.hidden=true;
 
-  // klassement + "Wint als" (4)
-  const exp=(data.exp||[]).filter(e=>e[0]&&e[1]);
-  const tg=document.getElementById("target"),bd=document.getElementById("board");
-  if(!exp.length){tg.textContent="";bd.innerHTML=`<p class="empty">Nog geen voorspellingen in het spreadsheet. Ze verschijnen hier zodra ze zijn ingevuld.</p>`;return}
-  const vals=[...new Set(exp.map(e=>e[1]))].sort((a,b)=>a-b);
-  const kE=v=>"€ "+Math.round(v/1000).toLocaleString("nl-NL")+"k";
-  const win=v=>{const i=vals.indexOf(v),lo=i>0?(vals[i-1]+v)/2:null,hi=i<vals.length-1?(v+vals[i+1])/2:null;
-    return lo==null?`onder ${kE(hi)}`:hi==null?`boven ${kE(lo)}`:`${kE(lo)} – ${kE(hi)}`};
-  const shared=v=>exp.filter(e=>e[1]===v).length>1;
-  if(prog==null){
-    tg.textContent=`${exp.length} voorspellingen · gemiddeld ${eur(sum(exp.map(e=>e[1]))/exp.length)}`;
-    const rows=[...exp].sort((a,b)=>a[1]-b[1]);
-    bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th>Wint als de eindomzet uitkomt op</th></tr></thead><tbody>${rows.map(([n,v])=>`<tr><td>${esc(n)}</td><td class="num">${eur(v)}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
+  /* --- voorspellingen & klassement --- */
+  const tg=document.getElementById("target"),bd=document.getElementById("board"),ch=document.getElementById("chips"),st=document.getElementById("strip");
+  if(!exp.length){tg.textContent="";ch.innerHTML="";st.innerHTML="";bd.innerHTML=`<p class="empty">Nog geen voorspellingen in het spreadsheet. Ze verschijnen hier zodra ze zijn ingevuld.</p>`;return}
+  const near=ev.filter(v=>v>T25*.5&&v<T25*2);
+  ch.innerHTML=[["Voorspellingen",exp.length],["Gemiddeld",eur(avgExp)],["Mediaan",eur(medExp)],["Laagste",eur(Math.min(...ev))],["Hoogste",eur(Math.max(...ev))],
+    ["Boven 2025-totaal",`${ev.filter(v=>v>T25).length} van ${ev.length}`]].concat(prog?[["Binnen € 25k van prognose",String(ev.filter(v=>Math.abs(v-prog)<=25000).length)]]:[])
+    .map(([l,v])=>`<div class="chip">${l}<b>${v}</b></div>`).join("");
+  // getallenlijn
+  const pool=near.concat([T25,TB],prog?[prog]:[]);
+  let lo=Math.min(...pool),hi=Math.max(...pool);const pad=(hi-lo)*.06||50000;lo-=pad;hi+=pad;
+  const XP=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
+  const leadName=ranked[0]?.n;
+  const ticks=[];const stepT=hi-lo>800000?200000:100000;for(let t=Math.ceil(lo/stepT)*stepT;t<=hi;t+=stepT)ticks.push(t);
+  st.innerHTML=`<div class="axis"></div>`+ticks.map(t=>`<span class="t" style="left:${XP(t)}%">${mln(t).replace(",00","")}</span>`).join("")+
+    `<div class="m" style="left:${XP(T25)}%"><span>2025</span></div><div class="m" style="left:${XP(TB)}%"><span>basis</span></div>`+
+    (prog?`<div class="m pg hi" style="left:${XP(prog)}%"><span>${filled===26?"eind":"prognose"}</span></div>`:"")+
+    exp.map(([n,v])=>`<span class="p${n===leadName?" lead":""}" style="left:${XP(v)}%" title="${esc(n)}: ${eur(v)}"></span>`).join("");
+  const vals=[...new Set(ev)].sort((a,b)=>a-b);
+  const win=v=>{if(vals.length===1)return"altijd (enige voorspelling)";const i=vals.indexOf(v),l=i>0?(vals[i-1]+v)/2:null,h=i<vals.length-1?(v+vals[i+1])/2:null;
+    return l==null?`onder ${kE(h)}`:h==null?`boven ${kE(l)}`:`${kE(l)} – ${kE(h)}`};
+  const shared=v=>ev.filter(x=>x===v).length>1;
+  const gap=(v,o)=>o==null?`<span class="note">–</span>`:`<span class="${cls(v-o)}">${pct(v/o-1)}</span><br><span class="note">${v>=o?"+":"−"}${eur(Math.abs(v-o)).slice(2)}</span>`;
+  if(!prog){
+    tg.textContent="op volgorde van voorspelling";
+    const srt=[...exp].sort((a,b)=>a[1]-b[1]);
+    bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th class="num">t.o.v. vorige</th><th class="num">t.o.v. volgende</th><th class="num">t.o.v. 2025</th><th>Wint als eindomzet</th></tr></thead><tbody>${srt.map(([n,v],i)=>`<tr><td>${esc(n)}</td><td class="num">${eur(v)}</td><td class="num">${gap(v,srt[i-1]?.[1])}</td><td class="num">${gap(v,srt[i+1]?.[1])}</td><td class="num ${cls(v/T25-1)}">${pct(v/T25-1)}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
     return}
-  tg.innerHTML=`${filled===26?"eindomzet":"prognose"} ${eur(prog)}`;
-  const ranked=exp.map(([n,v])=>({n,v,d:v-prog})).sort((a,b)=>Math.abs(a.d)-Math.abs(b.d));
+  tg.innerHTML=`vergeleken met ${filled===26?"eindomzet":"prognose"} ${eur(prog)}`;
   let pos=0,prev=null;
-  bd.innerHTML=`<table><thead><tr><th></th><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil</th><th>Wint als eindomzet</th></tr></thead><tbody>${ranked.map((r,i)=>{if(Math.abs(r.d)!==prev){pos=i+1;prev=Math.abs(r.d)}
-    return `<tr class="${pos<=3?"p"+pos:""}${pos===1?" lead":""}"><td><span class="rank">${pos}</span></td><td>${esc(r.n)}</td><td class="num">${eur(r.v)}</td><td class="num ${r.d>=0?"up":"down"}">${r.d>=0?"+":"−"}${eur(Math.abs(r.d)).slice(2)}</td><td class="win">${win(r.v)}${shared(r.v)?" (gedeeld)":""}</td></tr>`}).join("")}</tbody></table>`;
+  bd.innerHTML=`<table><thead><tr><th></th><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil</th><th class="num">Afwijking</th><th class="num">t.o.v. plek erboven</th><th>Wint als eindomzet</th></tr></thead><tbody>${ranked.map((r,i)=>{if(Math.abs(r.d)!==prev){pos=i+1;prev=Math.abs(r.d)}
+    return `<tr class="${pos<=3?"p"+pos:""}${pos===1?" lead":""}"><td><span class="rank">${pos}</span></td><td>${esc(r.n)}</td><td class="num">${eur(r.v)}</td><td class="num ${cls(r.d)}">${r.d>=0?"+":"−"}${eur(Math.abs(r.d)).slice(2)}</td><td class="num">${(Math.abs(r.d)/prog*100).toLocaleString("nl-NL",{maximumFractionDigits:1})}%</td><td class="num">${gap(r.v,ranked[i-1]?.v)}</td><td class="win">${win(r.v)}${shared(r.v)?" (gedeeld)":""}</td></tr>`}).join("")}</tbody></table>`;
 }
 
-/* ===== Verversen (7) ===== */
+/* ===== Verversen ===== */
 let manual=false;
 async function load(){
   if(manual)return;
   const dot=document.getElementById("dot"),upd=document.getElementById("upd");
-  try{
-    const data=DEMO?demoData():await fetchLive();
-    document.getElementById("demo").hidden=!DEMO;
-    render(data);dot.className="dot";upd.textContent=`Live · bijgewerkt ${new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"})}`;
-  }catch(e){
-    dot.className="dot off";upd.textContent=`Spreadsheet niet bereikbaar · nieuwe poging over ${REFRESH} s`;
-    if(!lastData)render({d26:Array(26).fill(null),exp:[]});
-  }
+  try{const data=DEMO?demoData():await fetchLive();document.getElementById("demo").hidden=!DEMO;render(data);
+    dot.className="dot";upd.textContent=`Live · bijgewerkt ${new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"})}`}
+  catch(e){dot.className="dot off";upd.textContent=`Spreadsheet niet bereikbaar · nieuwe poging over ${REFRESH} s`;if(!lastData)render({d26:Array(26).fill(null),exp:[]})}
 }
 const inp=document.getElementById("file"),drop=document.getElementById("drop");
 async function useFile(f){try{const d=await readFile(f);manual=true;document.getElementById("reset").hidden=false;render(d);document.getElementById("dot").className="dot idle";document.getElementById("upd").textContent=`Bestand: ${f.name}`}catch(e){document.getElementById("upd").textContent="Dit bestand kon niet worden gelezen. Gebruik het Black Friday 2026-spreadsheet als .xlsx."}}
