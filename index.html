@@ -211,6 +211,7 @@ const TB=T25*(1+SCEN.basis), TH=T25*(1+SCEN.hoog), TL=T25*(1+SCEN.laag);
 
 /* ===== Hulpjes ===== */
 const eur=v=>v==null||!isFinite(v)?"–":(v<0?"−":"")+"€ "+Math.round(Math.abs(v)).toLocaleString("nl-NL");
+const eurC=v=>v==null||!isFinite(v)?"–":(v<0?"−":"")+"€ "+Math.abs(v).toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2});
 const mln=v=>"€ "+(v/1e6).toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2})+" mln";
 const kE=v=>"€ "+Math.round(v/1000).toLocaleString("nl-NL")+"k";
 const pct=v=>v==null||!isFinite(v)?"–":(v>=0?"+":"−")+Math.abs(v*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
@@ -285,7 +286,7 @@ function render(data){
   const scale=Math.max(TH,prog||0,total)*1.04, X=v=>Math.min(100,v/scale*100);
   let mki=0;const mk=(v,lab,c="")=>`<div class="mk ${c}${X(v)>85?" r":""}${(mki++)%2?" lo":""}" style="left:${X(v)}%"><span>${lab}</span></div>`;
   if(has){
-    hl.innerHTML=`<div class="what">Omzet tot nu toe · ${filled} van 26 dagen</div><div class="big">${eur(total)}</div>
+    hl.innerHTML=`<div class="what">Omzet tot nu toe · ${filled} van 26 dagen</div><div class="big">${eurC(total)}</div>
       <div class="row"><span>t.o.v. 2025 <b class="${cls(growth)}">${pct(growth)}</b></span><span>t.o.v. 2024 <b class="${cls(total/same24-1)}">${pct(total/same24-1)}</b></span><span>${filled===26?"eindtotaal":"prognose"} <b>${eur(prog)}</b></span></div>
       <div class="prog"><div class="bar"><div class="fill" style="width:${X(total)}%"></div>${prog&&filled<26?`<div class="ghost" style="left:${X(total)}%;width:${X(prog)-X(total)}%"></div>`:""}</div>${mk(T25,"2025")}${mk(TB,"basis")}${mk(TH,"hoog","gold")}</div>`;
   }else{
@@ -326,7 +327,7 @@ function render(data){
     G("Vooruitblik","prognose","vs",true,[
       S("Eindtotaal",eur(prog),`<span class="${cls(prog/T25-1)}">${pct(prog/T25-1)}</span> t.o.v. 2025`),
       S(d26[BF]!=null?"Black Friday 2026":"Verwacht op Black Friday",eur(bfExp),`2025: ${eur(D25[BF])}`),
-      S("Koploper",ranked[0]?esc(ranked[0].n):"–",ranked[0]?`zit ${eur(Math.abs(ranked[0].d))} ${ranked[0].d>=0?"boven":"onder"} prognose`:"nog geen voorspellingen")])];
+      S("Koploper",ranked[0]?esc(ranked[0].n):"–",ranked[0]?`zit ${eurC(Math.abs(ranked[0].d))} ${ranked[0].d>=0?"boven":"onder"} prognose`:"nog geen voorspellingen")])];
   else tiles=[
     G("Black Friday 2025","ter vergelijking","",false,[
       S("Gemiddeld per dag",eur(T25/26),"over 26 dagen"),
@@ -337,8 +338,8 @@ function render(data){
       S("Laatste week",eur(sum(D25.slice(19))),"dag 20 t/m 26")]),
     G("Scenario's 2026","t.o.v. 2025","sc",true,scen3),
     G("Voorspellingen",`${exp.length} ingeleverd`,"vs",true,[
-      S("Gemiddeld",ev.length?eur(avgExp):"–",ev.length?`${pct(avgExp/T25-1)} t.o.v. 2025`:"nog niemand"),
-      S("Mediaan",medExp?eur(medExp):"–",medExp?`${pct(medExp/T25-1)} t.o.v. 2025`:"–"),
+      S("Gemiddeld",ev.length?eurC(avgExp):"–",ev.length?`${pct(avgExp/T25-1)} t.o.v. 2025`:"nog niemand"),
+      S("Mediaan",medExp?eurC(medExp):"–",medExp?`${pct(medExp/T25-1)} t.o.v. 2025`:"–"),
       S("Laagste – hoogste",ev.length?`${(Math.min(...ev)/1e6).toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2})}–${(Math.max(...ev)/1e6).toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2})} mln`:"–",ev.length?`spreiding ${kE(Math.max(...ev)-Math.min(...ev))}`:"–")])];
   document.getElementById("stats").innerHTML=tiles.join("");
 
@@ -405,7 +406,7 @@ function render(data){
   const tg=document.getElementById("target"),bd=document.getElementById("board"),ch=document.getElementById("chips"),st=document.getElementById("strip");
   if(!exp.length){tg.textContent="";ch.innerHTML="";st.innerHTML="";bd.innerHTML=`<p class="empty">Nog geen voorspellingen in het spreadsheet. Ze verschijnen hier zodra ze zijn ingevuld.</p>`;return}
   const near=ev.filter(v=>v>T25*.5&&v<T25*2);
-  ch.innerHTML=[["Voorspellingen",exp.length],["Gemiddeld",eur(avgExp)],["Mediaan",eur(medExp)],["Laagste",eur(Math.min(...ev))],["Hoogste",eur(Math.max(...ev))],
+  ch.innerHTML=[["Voorspellingen",exp.length],["Gemiddeld",eurC(avgExp)],["Mediaan",eurC(medExp)],["Laagste",eurC(Math.min(...ev))],["Hoogste",eurC(Math.max(...ev))],
     ["Boven 2025-totaal",`${ev.filter(v=>v>T25).length} van ${ev.length}`]].concat(prog?[["Binnen € 25k van prognose",String(ev.filter(v=>Math.abs(v-prog)<=25000).length)]]:[])
     .map(([l,v])=>`<div class="chip">${l}<b>${v}</b></div>`).join("");
   // getallenlijn
@@ -417,7 +418,7 @@ function render(data){
   st.innerHTML=`<div class="axis"></div>`+ticks.map(t=>`<span class="t" style="left:${XP(t)}%">${mln(t).replace(",00","")}</span>`).join("")+
     `<div class="m" style="left:${XP(T25)}%"><span>2025</span></div><div class="m" style="left:${XP(TB)}%"><span>basis</span></div>`+
     (prog?`<div class="m pg hi" style="left:${XP(prog)}%"><span>${filled===26?"eind":"prognose"}</span></div>`:"")+
-    exp.map(([n,v])=>`<span class="p${n===leadName?" lead":""}" style="left:${XP(v)}%" title="${esc(n)}: ${eur(v)}"></span>`).join("");
+    exp.map(([n,v])=>`<span class="p${n===leadName?" lead":""}" style="left:${XP(v)}%" title="${esc(n)}: ${eurC(v)}"></span>`).join("");
   const vals=[...new Set(ev)].sort((a,b)=>a-b);
   const win=v=>{if(vals.length===1)return"altijd (enige voorspelling)";const i=vals.indexOf(v),l=i>0?(vals[i-1]+v)/2:null,h=i<vals.length-1?(v+vals[i+1])/2:null;
     return l==null?`onder ${kE(h)}`:h==null?`boven ${kE(l)}`:`${kE(l)} – ${kE(h)}`};
@@ -426,12 +427,12 @@ function render(data){
   if(!prog){
     tg.textContent="op volgorde van voorspelling";
     const srt=[...exp].sort((a,b)=>a[1]-b[1]);
-    bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil met vorige</th><th>Wint als eindomzet</th></tr></thead><tbody>${srt.map(([n,v],i)=>`<tr><td>${esc(n)}</td><td class="num">${eur(v)}</td><td class="num">${gap(v,srt[i-1]?.[1])}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
+    bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil met vorige</th><th>Wint als eindomzet</th></tr></thead><tbody>${srt.map(([n,v],i)=>`<tr><td>${esc(n)}</td><td class="num">${eurC(v)}</td><td class="num">${gap(v,srt[i-1]?.[1])}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
     return}
-  tg.innerHTML=`vergeleken met ${filled===26?"eindomzet":"prognose"} ${eur(prog)}`;
+  tg.innerHTML=`vergeleken met ${filled===26?"eindomzet":"prognose"} ${eurC(prog)}`;
   let pos=0,prev=null;
   bd.innerHTML=`<table><thead><tr><th></th><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil</th><th class="num">Afwijking</th><th class="num">t.o.v. plek erboven</th><th>Wint als eindomzet</th></tr></thead><tbody>${ranked.map((r,i)=>{if(Math.abs(r.d)!==prev){pos=i+1;prev=Math.abs(r.d)}
-    return `<tr class="${pos<=3?"p"+pos:""}${pos===1?" lead":""}"><td><span class="rank">${pos}</span></td><td>${esc(r.n)}</td><td class="num">${eur(r.v)}</td><td class="num ${cls(r.d)}">${r.d>=0?"+":"−"}${eur(Math.abs(r.d)).slice(2)}</td><td class="num">${(Math.abs(r.d)/prog*100).toLocaleString("nl-NL",{maximumFractionDigits:1})}%</td><td class="num">${gap(r.v,ranked[i-1]?.v)}</td><td class="win">${win(r.v)}${shared(r.v)?" (gedeeld)":""}</td></tr>`}).join("")}</tbody></table>`;
+    return `<tr class="${pos<=3?"p"+pos:""}${pos===1?" lead":""}"><td><span class="rank">${pos}</span></td><td>${esc(r.n)}</td><td class="num">${eurC(r.v)}</td><td class="num ${cls(r.d)}">${r.d>=0?"+":"−"}${eurC(Math.abs(r.d)).slice(2)}</td><td class="num">${(Math.abs(r.d)/prog*100).toLocaleString("nl-NL",{maximumFractionDigits:1})}%</td><td class="num">${gap(r.v,ranked[i-1]?.v)}</td><td class="win">${win(r.v)}${shared(r.v)?" (gedeeld)":""}</td></tr>`}).join("")}</tbody></table>`;
 }
 
 /* ===== Verversen ===== */
