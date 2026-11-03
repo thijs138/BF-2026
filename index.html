@@ -186,8 +186,8 @@ summary{cursor:pointer;font-weight:600;color:var(--ink)}
     <summary>Zo werkt het</summary>
     <p>De pagina leest elke minuut het Google-spreadsheet "Black Friday 2026" uit: de dagomzet in kolom C van "Dagomzet 2026" en de namen en voorspellingen in kolom A en B van "Verwachtingen 2026".</p>
     <p><b>Prognose</b> = omzet tot nu toe ÷ omzet 2025 over dezelfde dagen × eindtotaal 2025 (€ 1.595.732). Zo telt de Black Friday-piek mee.<br>
-    <b>Scenario's</b> laag (−1%), basis (+6%) en hoog (+14%) komen uit de omzetverwachting van een collega.<br>
-    <b>Klassement:</b> wie het dichtst bij de eindomzet zit wint. Tijdens de actie wordt de prognose gebruikt. "Wint als" laat zien bij welke eindomzet iemand op 1 eindigt.<br><b>Nog in de race:</b> de oranje band op de getallenlijn laat zien waar de eindomzet waarschijnlijk uitkomt (de resterende dagen met de huidige groei ±10 procentpunt). Wie daarbuiten valt, staat grijs. De band wordt smaller naarmate de actie vordert.<br><b>▲▼</b> = hoeveel plekken iemand is gestegen of gezakt sinds de vorige dag.</p>
+    <b>Doel:</b> het doel voor november is € 1.903.000. Het doel voor de actie (5 t/m 30 nov) is dat bedrag min de omzet van 1 t/m 4 november, verdeeld over de dagen volgens het patroon van 2025 (gouden stippellijn).<br>
+    <b>Vandaag:</b> de omzet van de lopende dag telt mee in "omzet tot nu toe", maar nog niet in de prognose, groei en het klassement. Pas de volgende dag telt hij volledig mee (in de grafiek gestippeld).<br><b>Klassement:</b> wie het dichtst bij de eindomzet zit wint. Tijdens de actie wordt de prognose gebruikt. "Wint als" laat zien bij welke eindomzet iemand op 1 eindigt.<br><b>Nog in de race:</b> de oranje band op de getallenlijn laat zien waar de eindomzet waarschijnlijk uitkomt (de resterende dagen met de huidige groei ±10 procentpunt). Wie daarbuiten valt, staat grijs. De band wordt smaller naarmate de actie vordert.<br><b>▲▼</b> = hoeveel plekken iemand is gestegen of gezakt sinds de vorige dag.</p>
     <p>Lukt het ophalen niet? Download het spreadsheet als .xlsx en sleep het hieronder naartoe.</p>
     <label class="drop" id="drop" for="file"><span>Sleep een .xlsx of .csv hierheen of kies een bestand.</span><span><span class="btn">Bestand kiezen</span> <button type="button" class="btn ghost" id="reset" hidden>Terug naar live</button></span><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></label>
   </details>
@@ -207,12 +207,14 @@ const D25=[127807.31,84383.49,55590.06,47032.82,67708.98,54933.01,57771.85,44833
 const D24=[113001.19,80407.53,42553.23,58788.01,51922.45,38742.22,55165.19,44495.62,38159.25,40984.70,46280.88,54643.23,50882.83,51865.95,55515.51,53107.46,47151.47,57601.83,75448.13,53218.52,81864.29,77506.09,147142.42,36083.42,78414.09,62842.79];
 const D23=[71027.27,60659.23,40927.60,51896.85,36655.70,48185.31,42066.87,87613.90,51456.15,83318.30,93844.15,21705.87,40943.40,45595.07];
 const D22=[96663.61,71729.34,68760.29,66417.68,80988.05,74411.64,110202.72,106170.44,30164.35,55434.56,62364.76];
-const SCEN={laag:-.01,basis:.06,hoog:.14}; // omzetverwachting collega (BF2026_omzetverwachting.xlsx)
+/* ===== Doel ===== */
+const DOEL_NOV=1903000;        // doel hele maand november
+const OMZET_1_4_NOV=null;      // omzet 1 t/m 4 november; vul in zodra bekend (bijv. 245000.00)
 const sum=a=>a.reduce((s,v)=>s+(v||0),0);
 const cum=a=>{let s=0;return a.map(v=>v==null?null:(s+=v))};
 const T25=sum(D25), T24=sum(D24), C25=cum(D25), C24=cum(D24);
-const scen=k=>D25.map(v=>v*(1+SCEN[k]));
-const TB=T25*(1+SCEN.basis), TH=T25*(1+SCEN.hoog), TL=T25*(1+SCEN.laag);
+const TD=OMZET_1_4_NOV!=null?DOEL_NOV-OMZET_1_4_NOV:null;          // doel voor de BF-periode (5 t/m 30 nov)
+const DD=TD?D25.map(v=>v/T25*TD):Array(26).fill(null), CD=cum(DD);  // doel per dag volgens het patroon van 2025
 
 /* ===== Hulpjes ===== */
 const eur=v=>v==null||!isFinite(v)?"–":(v<0?"−":"")+"€ "+Math.round(Math.abs(v)).toLocaleString("nl-NL");
@@ -277,7 +279,13 @@ function countdown(){
 let c1,c2,lastData=null;
 function render(data){
   lastData=data;
-  const d26=data.d26, idx=d26.map((v,i)=>v!=null?i:-1).filter(i=>i>=0);
+  const dAll=data.d26, tIdx=Math.floor((new Date(now()).setHours(0,0,0,0)-START)/864e5);
+  const lastAll=dAll.reduce((a,v,i)=>v!=null?i:a,-1);
+  // de dag van vandaag is nog niet af: telt mee in de omzet, maar niet in prognose, groei en klassement
+  const partial=lastAll>=0&&lastAll===tIdx, pVal=partial?dAll[lastAll]:0;
+  const tNow=new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"});
+  const d26=dAll.slice(); if(partial)d26[lastAll]=null;
+  const idx=d26.map((v,i)=>v!=null?i:-1).filter(i=>i>=0);
   const filled=idx.length, last=filled?idx[filled-1]:-1, has=filled>0;
   const total=sum(d26), C26=cum(d26);
   const same25=sum(idx.map(i=>D25[i])), same24=sum(idx.map(i=>D24[i]));
@@ -288,16 +296,16 @@ function render(data){
 
   /* --- kopband links --- */
   const hl=document.getElementById("heroL");
-  const scale=Math.max(TH,prog||0,total)*1.04, X=v=>Math.min(100,v/scale*100);
+  const scale=Math.max(TD||0,T25,prog||0,total)*1.08, X=v=>Math.min(100,v/scale*100);
   let mki=0;const mk=(v,lab,c="")=>`<div class="mk ${c}${X(v)>85?" r":""}${(mki++)%2?" lo":""}" style="left:${X(v)}%"><span>${lab}</span></div>`;
-  if(has){
-    hl.innerHTML=`<div class="what">Omzet tot nu toe · ${filled} van 26 dagen</div><div class="big">${eurC(total)}</div>
-      <div class="row"><span>t.o.v. 2025 <b class="${cls(growth)}">${pct(growth)}</b></span><span>t.o.v. 2024 <b class="${cls(total/same24-1)}">${pct(total/same24-1)}</b></span><span>${filled===26?"eindtotaal":"prognose"} <b>${eur(prog)}</b></span></div>
-      <div class="prog"><div class="bar"><div class="fill" style="width:${X(total)}%"></div>${prog&&filled<26?`<div class="ghost" style="left:${X(total)}%;width:${X(prog)-X(total)}%"></div>`:""}</div>${mk(T25,"2025")}${mk(TB,"basis")}${mk(TH,"hoog","gold")}</div>`;
+  if(has||partial){
+    hl.innerHTML=`<div class="what">Omzet tot nu toe · ${partial?`${filled} hele dagen + vandaag t/m ${tNow}`:`${filled} van 26 dagen`}</div><div class="big">${eurC(total+pVal)}</div>
+      <div class="row"><span>t.o.v. 2025 <b class="${cls(growth)}">${pct(growth)}</b></span><span>t.o.v. 2024 <b class="${cls(total/same24-1)}">${pct(total/same24-1)}</b></span><span>${filled===26?"eindtotaal":"prognose"} <b>${eur(prog)}</b></span>${TD?`<span>doel <b>${eur(TD)}</b> · op koers <b class="${cls(total/CD[last]-1)}">${pct(total/CD[last]-1)}</b></span>`:""}${OMZET_1_4_NOV!=null?`<span>november <b>${eur(OMZET_1_4_NOV+total+pVal)}</b> van ${eur(DOEL_NOV)}</span>`:""}</div>
+      <div class="prog"><div class="bar"><div class="fill" style="width:${X(total+pVal)}%"></div>${prog&&filled<26?`<div class="ghost" style="left:${X(total)}%;width:${X(prog)-X(total)}%"></div>`:""}</div>${mk(T25,"2025")}${TD?mk(TD,"doel","gold"):""}</div>`;
   }else{
     hl.innerHTML=`<div class="what">Te verslaan · eindtotaal 2025</div><div class="big">${eur(T25)}</div>
-      <div class="row"><span>2024 <b>${eur(T24)}</b></span><span>basisscenario 2026 <b>${eur(TB)}</b></span><span>${exp.length} ${exp.length===1?"voorspelling":"voorspellingen"} binnen</span></div>
-      <div class="prog"><div class="bar"></div>${mk(TL,"laag")}${mk(T25,"2025")}${mk(TB,"basis")}${mk(TH,"hoog","gold")}</div>`;
+      <div class="row"><span>2024 <b>${eur(T24)}</b></span><span>doel november <b>${eur(DOEL_NOV)}</b></span><span>doel BF-periode <b>${TD?eur(TD):"volgt"}</b></span><span>${exp.length} ${exp.length===1?"voorspelling":"voorspellingen"} binnen</span></div>
+      <div class="prog"><div class="bar"></div>${mk(T25,"2025")}${TD?mk(TD,"doel","gold"):""}</div>`;
   }
 
   /* --- statistiekenmuur --- */
@@ -306,20 +314,20 @@ function render(data){
   const l7=idx.slice(-7), s7=sum(l7.map(i=>d26[i])), s7o=sum(l7.map(i=>D25[i]));
   const left=26-filled, rest25=has?T25-C25[last]:T25;
   const need=(t)=>left>0?Math.max(0,t-total)/left:null;
-  const bfExp=d26[BF]!=null?d26[BF]:D25[BF]*(1+(growth??SCEN.basis));
+  const bfExp=d26[BF]!=null?d26[BF]:(growth!=null?D25[BF]*(1+growth):TD?DD[BF]:D25[BF]);
   const avgExp=ev.length?sum(ev)/ev.length:null, medExp=median(ev);
   const ranked=prog?exp.map(([n,v])=>({n,v,d:v-prog})).sort((a,b)=>Math.abs(a.d)-Math.abs(b.d)):[];
   const S=(l,v,n,c="")=>`<div class="st ${c}"><span class="l">${l}</span><span class="v">${v}</span><span class="n">${n}</span></div>`;
   const G=(title,sub,c,one,items)=>`<div class="grp ${c}"><div class="gh"><b>${title}</b><span>${sub}</span></div><div class="gi${one?" one":""}">${items.join("")}</div></div>`;
   const dot=c=>`<span class="mk2" style="background:${c}"></span>`;
-  const scen3=[
-    S(`${dot("var(--y24)")}Laag`,eur(TL),pct(SCEN.laag)),
-    S(`${dot("var(--accent)")}Basis`,eur(TB),pct(SCEN.basis),"hl"),
-    S(`${dot("var(--gold)")}Hoog`,eur(TH),pct(SCEN.hoog))];
+  const doel3=[
+    S(`${dot("var(--gold)")}Doel november`,eur(DOEL_NOV),"1 t/m 30 november","hl"),
+    S("Omzet 1 t/m 4 nov",OMZET_1_4_NOV!=null?eur(OMZET_1_4_NOV):"volgt","vóór de actie"),
+    S("Doel BF-periode",TD?eur(TD):"volgt",TD?`${pct(TD/T25-1)} t.o.v. 2025 · ${eur(TD/26)}/dag`:"5 t/m 30 november")];
   let tiles;
   if(has)tiles=[
     G("Omzet 2026",`${filled} van 26 dagen`,"",false,[
-      S(`Laatste dag · ${dl(last)}`,eur(d26[last]),`<span class="${cls(d26[last]/D25[last]-1)}">${pct(d26[last]/D25[last]-1)}</span> vs ${eur(D25[last])}`),
+      partial?S(`Vandaag t/m ${tNow}`,eur(pVal),`nog bezig · 2025 hele dag: ${eur(D25[lastAll])}`):S(`Laatste dag · ${dl(last)}`,eur(d26[last]),`<span class="${cls(d26[last]/D25[last]-1)}">${pct(d26[last]/D25[last]-1)}</span> vs ${eur(D25[last])}`),
       S("Gemiddeld per dag",eur(total/filled),`2025: ${eur(same25/filled)} · <span class="${cls(growth)}">${pct(growth)}</span>`),
       S("Laatste 7 dagen",eur(s7),`<span class="${cls(s7/s7o-1)}">${pct(s7/s7o-1)}</span> vs 2025`),
       S("Beste dag",eur(d26[best]),`dag ${best+1} · ${dl(best)}`),
@@ -328,7 +336,7 @@ function render(data){
     G("Doelen","nog nodig per dag om te halen","sc",true,[
       S("Bereikt van 2025-totaal",pc0(total/T25),`2025 stond toen op ${pc0(C25[last]/T25)}`),
       S("Nodig voor totaal 2025",left?eur(need(T25)):"–",left?`2025 deed nog ${eur(rest25/left)}/dag`:"actie afgelopen"),
-      S(`${dot("var(--accent)")}Nodig voor basisscenario`,left?eur(need(TB)):"–",`<span class="${cls(total/(same25*(1+SCEN.basis))-1)}">${pct(total/(same25*(1+SCEN.basis))-1)}</span> t.o.v. basis`,"hl")]),
+      S(`${dot("var(--gold)")}Nodig voor doel`,TD&&left?eur(need(TD)):"–",TD?`<span class="${cls(total/CD[last]-1)}">${pct(total/CD[last]-1)}</span> t.o.v. doel tot nu toe`:"doel volgt","hl")]),
     G("Vooruitblik","prognose","vs",true,[
       S("Eindtotaal",eur(prog),`<span class="${cls(prog/T25-1)}">${pct(prog/T25-1)}</span> t.o.v. 2025`),
       S(d26[BF]!=null?"Black Friday 2026":"Verwacht op Black Friday",eur(bfExp),`2025: ${eur(D25[BF])}`),
@@ -341,7 +349,7 @@ function render(data){
       S("Beste startdag",eur(D25[0]),"dag 1"),
       S("Groei t.o.v. 2024",pct(T25/T24-1),"vrijwel gelijk"),
       S("Laatste week",eur(sum(D25.slice(19))),"dag 20 t/m 26")]),
-    G("Scenario's 2026","t.o.v. 2025","sc",true,scen3),
+    G("Doel 2026","november","sc",true,doel3),
     G("Voorspellingen",`${exp.length} ingeleverd`,"vs",true,[
       S("Gemiddeld",ev.length?eurC(avgExp):"–",ev.length?`${pct(avgExp/T25-1)} t.o.v. 2025`:"nog niemand"),
       S("Mediaan",medExp?eurC(medExp):"–",medExp?`${pct(medExp/T25-1)} t.o.v. 2025`:"–"),
@@ -357,13 +365,13 @@ function render(data){
     plugins:{legend:{display:false},tooltip:{filter:i=>i.raw!=null&&i.dataset.label.indexOf("Scenario")!==0,callbacks:{title:it=>`Dag ${it[0].dataIndex+1} · ${dl(it[0].dataIndex)}`,label:c=>`${c.dataset.label}: ${eur(c.parsed.y)}`}}},
     scales:{x:{grid:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:10},maxRotation:0,autoSkip:true}},y:{grid:{color:L},border:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:10},callback:fmt}}}});
   const labels=D25.map((_,i)=>String(i+1));
-  document.getElementById("leg1").innerHTML=leg([[A,"2026"],[Y5,"2025"],[Y4,"2024",1],[A,"Basis",1]]);
-  const s1=[ds("2026",d26,A,3,null,{pointRadius:d26.map((_,i)=>i===last?4:0)}),ds("2025",D25,Y5,2),ds("2024",D24,Y4,2,[6,4]),ds("Basisscenario",scen("basis"),A,1.5,[2,4])];
+  document.getElementById("leg1").innerHTML=leg([[A,"2026"],[Y5,"2025"],[Y4,"2024",1]].concat(TD?[[css("--gold"),"Doel",1]]:[]));
+  const s1=[ds("2026",dAll,A,3,null,{pointRadius:dAll.map((_,i)=>i===lastAll?4:0),pointStyle:dAll.map((_,i)=>partial&&i===lastAll?"rectRot":"circle"),segment:{borderDash:c=>partial&&c.p1DataIndex===lastAll?[4,4]:undefined}}),ds("2025",D25,Y5,2),ds("2024",D24,Y4,2,[6,4]),ds("Doel",DD,css("--gold"),1.5,[3,4])];
   const proj=Array(26).fill(null);
   if(has&&filled<26){proj[last]=C26[last];for(let i=last+1;i<26;i++)proj[i]=proj[i-1]+D25[i]*(1+growth)}
-  const s2=[ds("Scenario laag",cum(scen("laag")),"transparent",0),ds("Scenario hoog",cum(scen("hoog")),"transparent",0,null,{fill:"-1",backgroundColor:B}),
-    ds("2026",C26,A,3,null,{pointRadius:d26.map((_,i)=>i===last?4:0)}),ds("Prognose",proj,A,2,[6,4]),ds("2025",C25,Y5,2),ds("2024",C24,Y4,2,[6,4])];
-  document.getElementById("leg2").innerHTML=leg([[A,"2026"],[A,"Prognose",1],[Y5,"2025"],[Y4,"2024",1],[A,"Laag–hoog","band"]]);
+  const s2=[ds("Doel",CD,css("--gold"),2,[3,4]),
+    ds("2026",cum(dAll),A,3,null,{pointRadius:dAll.map((_,i)=>i===lastAll?4:0),segment:{borderDash:c=>partial&&c.p1DataIndex===lastAll?[4,4]:undefined}}),ds("Prognose",proj,A,2,[6,4]),ds("2025",C25,Y5,2),ds("2024",C24,Y4,2,[6,4])];
+  document.getElementById("leg2").innerHTML=leg([[A,"2026"],[A,"Prognose",1],[Y5,"2025"],[Y4,"2024",1]].concat(TD?[[css("--gold"),"Doel",1]]:[]));
   const fK=v=>"€ "+(v/1000).toLocaleString("nl-NL")+"k", fM=v=>"€ "+(v/1e6).toLocaleString("nl-NL",{maximumFractionDigits:1})+" mln";
   if(!c1){c1=new Chart(document.getElementById("c1"),{type:"line",data:{labels,datasets:s1},options:opts(fK),plugins:[bfPlug]});
           c2=new Chart(document.getElementById("c2"),{type:"line",data:{labels,datasets:s2},options:opts(fM),plugins:[bfPlug]})}
@@ -382,7 +390,7 @@ function render(data){
   /* --- mijlpalen --- */
   const reach=(c,t)=>{const i=c.findIndex(v=>v!=null&&v>=t);return i<0?null:i};
   const MS=[[250000,"€ 250.000"],[500000,"€ 500.000"],[750000,"€ 750.000"],[1e6,"€ 1 miljoen"],[1.25e6,"€ 1,25 miljoen"],[1.5e6,"€ 1,5 miljoen"],
-    [T24,"Totaal 2024 voorbij"],[T25,"Totaal 2025 voorbij"],[TB,"Basisscenario"],[TH,"Hoog scenario"]];
+    [T24,"Totaal 2024 voorbij"],[T25,"Totaal 2025 voorbij"]].concat(TD?[[TD,"Doel BF-periode gehaald"]]:[]);
   const events=[];
   document.getElementById("ms").innerHTML=MS.map(([t,lab])=>{const i=reach(C26,t),j=reach(C25,t);let r;
     if(i!=null){const d=j==null?null:j-i;r=`dag ${i+1}${d==null?"":d>0?` · ${d}d eerder`:d<0?` · ${-d}d later`:" · = 2025"}`;if(i===last)events.push(`Mijlpaal: ${lab}`)}
@@ -417,20 +425,20 @@ function render(data){
   // kansrijke band: resterende dagen met groei ±10 procentpunt rond de huidige groei
   let bLo=null,bHi=null,bLab="";
   if(prog&&filled<26){const rest=T25-C25[last];bLo=total+rest*(1+growth-.10);bHi=total+rest*(1+growth+.10);bLab="nog in de race"}
-  else if(!prog){bLo=TL;bHi=TH;bLab="scenario laag–hoog"}
+  
   const vals=[...new Set(ev)].sort((a,b)=>a-b);
   const wi=v=>{const i=vals.indexOf(v);return[i>0?(vals[i-1]+v)/2:-Infinity,i<vals.length-1?(v+vals[i+1])/2:Infinity]};
   const inRace=v=>{if(bLo==null)return true;const[l,h]=wi(v);return h>=bLo&&l<=bHi};
   const raceN=ev.filter(inRace).length;
   if(prog&&filled<26)ch.innerHTML+=`<div class="chip">Nog in de race<b>${raceN} van ${ev.length}</b></div>`;
   // getallenlijn
-  const pool=near.concat([T25,TB],prog?[prog]:[],bLo!=null?[bLo,bHi]:[]);
+  const pool=near.concat([T25],TD?[TD]:[],prog?[prog]:[],bLo!=null?[bLo,bHi]:[]);
   let lo=Math.min(...pool),hi=Math.max(...pool);const pad=(hi-lo)*.06||50000;lo-=pad;hi+=pad;
   const XP=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
   const leadName=ranked[0]?.n;
   const ticks=[];const stepT=hi-lo>800000?200000:100000;for(let t=Math.ceil(lo/stepT)*stepT;t<=hi;t+=stepT)ticks.push(t);
   st.innerHTML=(bLo!=null?`<div class="band" style="left:${XP(bLo)}%;width:${XP(bHi)-XP(bLo)}%"><span>${bLab}${prog?` · ${raceN} van ${ev.length}`:""}</span></div>`:"")+`<div class="axis"></div>`+ticks.map(t=>`<span class="t" style="left:${XP(t)}%">${mln(t).replace(",00","")}</span>`).join("")+
-    `<div class="m" style="left:${XP(T25)}%"><span>2025</span></div><div class="m" style="left:${XP(TB)}%"><span>basis</span></div>`+
+    `<div class="m" style="left:${XP(T25)}%"><span>2025</span></div>`+(TD?`<div class="m" style="left:${XP(TD)}%"><span>doel</span></div>`:"")+
     (prog?`<div class="m pg hi" style="left:${XP(prog)}%"><span>${filled===26?"eind":"prognose"}</span></div>`:"")+
     exp.map(([n,v])=>`<span class="p${n===leadName?" lead":""}" style="left:${XP(v)}%" title="${esc(n)}: ${eurC(v)}"></span>`).join("");
   const win=v=>{if(vals.length===1)return"altijd (enige voorspelling)";const i=vals.indexOf(v),l=i>0?(vals[i-1]+v)/2:null,h=i<vals.length-1?(v+vals[i+1])/2:null;
