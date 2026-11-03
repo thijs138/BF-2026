@@ -423,7 +423,7 @@ function render(data){
   const win=v=>{if(vals.length===1)return"altijd (enige voorspelling)";const i=vals.indexOf(v),l=i>0?(vals[i-1]+v)/2:null,h=i<vals.length-1?(v+vals[i+1])/2:null;
     return l==null?`onder ${kE(h)}`:h==null?`boven ${kE(l)}`:`${kE(l)} – ${kE(h)}`};
   const shared=v=>ev.filter(x=>x===v).length>1;
-  const gap=(v,o)=>o==null?"–":pct(v/o-1);
+  const gap=(v,o)=>o==null?"–":`${v>=o?"+":"−"} ${eurC(Math.abs(v-o))} <span class="note">(${pct(v/o-1)})</span>`;
   if(!prog){
     tg.textContent="op volgorde van voorspelling";
     const srt=[...exp].sort((a,b)=>a[1]-b[1]);
