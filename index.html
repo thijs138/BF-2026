@@ -184,9 +184,9 @@ summary{cursor:pointer;font-weight:600;color:var(--ink)}
 
   <details>
     <summary>Zo werkt het</summary>
-    <p>De pagina leest elke minuut het Google-spreadsheet "Black Friday 2026" uit: de dagomzet in kolom C van "Dagomzet 2026" en de namen en voorspellingen in kolom A en B van "Verwachtingen 2026".</p>
+    <p>De pagina leest elke minuut het Google-spreadsheet "Black Friday 2026" uit: de dagomzet in kolom C en de buitendienst-omzet in kolom M van "Dagomzet 2026", en de namen en voorspellingen in kolom A en B van "Verwachtingen 2026".</p>
     <p><b>Prognose</b> = omzet tot nu toe ÷ omzet 2025 over dezelfde dagen × eindtotaal 2025 (€ 1.595.732). Zo telt de Black Friday-piek mee.<br>
-    <b>Doel:</b> het doel voor november is € 1.903.000. Het doel voor de actie (5 t/m 30 nov) is dat bedrag min de omzet van 1 t/m 4 november, verdeeld over de dagen volgens het patroon van 2025 (gouden stippellijn).<br>
+    <b>Doel:</b> het doel voor november is € 1.903.000. De omzet van 1 t/m 4 november staat in het spreadsheet in "Dagomzet 2026", cel K16. Het doel voor de actie (5 t/m 30 nov) is dat bedrag min de omzet van 1 t/m 4 november, verdeeld over de dagen volgens het patroon van 2025 (gouden stippellijn).<br>
     <b>Vandaag:</b> de omzet van de lopende dag telt mee in "omzet tot nu toe", maar nog niet in de prognose, groei en het klassement. Pas de volgende dag telt hij volledig mee (in de grafiek gestippeld).<br><b>Klassement:</b> wie het dichtst bij de eindomzet zit wint. Tijdens de actie wordt de prognose gebruikt. "Wint als" laat zien bij welke eindomzet iemand op 1 eindigt.<br><b>Nog in de race:</b> de oranje band op de getallenlijn laat zien waar de eindomzet waarschijnlijk uitkomt (de resterende dagen met de huidige groei ±10 procentpunt). Wie daarbuiten valt, staat grijs. De band wordt smaller naarmate de actie vordert.<br><b>▲▼</b> = hoeveel plekken iemand is gestegen of gezakt sinds de vorige dag.</p>
     <p>Lukt het ophalen niet? Download het spreadsheet als .xlsx en sleep het hieronder naartoe.</p>
     <label class="drop" id="drop" for="file"><span>Sleep een .xlsx of .csv hierheen of kies een bestand.</span><span><span class="btn">Bestand kiezen</span> <button type="button" class="btn ghost" id="reset" hidden>Terug naar live</button></span><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></label>
@@ -209,12 +209,17 @@ const D23=[71027.27,60659.23,40927.60,51896.85,36655.70,48185.31,42066.87,87613.
 const D22=[96663.61,71729.34,68760.29,66417.68,80988.05,74411.64,110202.72,106170.44,30164.35,55434.56,62364.76];
 /* ===== Doel ===== */
 const DOEL_NOV=1903000;        // doel hele maand november
-const OMZET_1_4_NOV=null;      // omzet 1 t/m 4 november; vul in zodra bekend (bijv. 245000.00)
+const OMZET_1_4_NOV=null;      // reserve: wordt normaal uit het spreadsheet gelezen (Dagomzet 2026, cel K16)
 const sum=a=>a.reduce((s,v)=>s+(v||0),0);
 const cum=a=>{let s=0;return a.map(v=>v==null?null:(s+=v))};
 const T25=sum(D25), T24=sum(D24), C25=cum(D25), C24=cum(D24);
-const TD=OMZET_1_4_NOV!=null?DOEL_NOV-OMZET_1_4_NOV:null;          // doel voor de BF-periode (5 t/m 30 nov)
-const DD=TD?D25.map(v=>v/T25*TD):Array(26).fill(null), CD=cum(DD);  // doel per dag volgens het patroon van 2025
+// buitendienst-omzet per dag (2024 compleet, 2025 alleen dag 1 t/m 7 bekend)
+const BD24=[80252.39,44718.64,17008.22,14807.79,19807.75,14895.76,23386.44,20850.46,13770.72,13789.33,5068.39,14848.51,21100.28,16748.96,23077.14,24015.27,11503.14,10421.67,26131.40,18456.71,32862.05,25542.56,50573.67,648.95,10160.29,22554.88];
+const BD25=[90394.27,51710.29,21084.16,10010.68,28342.56,19831.10,34450.61];
+const TBS=T25*1.06; // basisscenario collega (+6% t.o.v. 2025)
+let PRE=OMZET_1_4_NOV,TD,DD,CD;
+function setDoel(pre){PRE=pre!=null?pre:OMZET_1_4_NOV;TD=PRE!=null?DOEL_NOV-PRE:null;DD=TD?D25.map(v=>v/T25*TD):Array(26).fill(null);CD=cum(DD)}
+setDoel(null);
 
 /* ===== Hulpjes ===== */
 const eur=v=>v==null||!isFinite(v)?"–":(v<0?"−":"")+"€ "+Math.round(Math.abs(v)).toLocaleString("nl-NL");
@@ -241,15 +246,15 @@ function gviz(sheet,range){return new Promise((ok,fail)=>{const cb="__bf"+(++seq
   s.src=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:${cb}&headers=0&sheet=${encodeURIComponent(sheet)}&range=${range}&_=${Date.now()}`;
   document.head.appendChild(s)})}
 async function fetchLive(){
-  const [days,exp]=await Promise.all([gviz("Dagomzet 2026","A5:C30"),gviz("Verwachtingen 2026","A6:B65")]);
-  const d26=Array(26).fill(null);
-  days.forEach((r,i)=>{const m=String(r[0]??"").match(/(\d+)/);const idx=m?+m[1]-1:i;if(idx>=0&&idx<26)d26[idx]=num(r[2])});
-  return {d26,exp:exp.map(r=>[String(r[0]??"").trim(),num(r[1])]).filter(e=>e[0]&&e[1])};
+  const [days,exp,pre]=await Promise.all([gviz("Dagomzet 2026","A5:M30"),gviz("Verwachtingen 2026","A6:B65"),gviz("Dagomzet 2026","K16:K16").catch(()=>[])]);
+  const d26=Array(26).fill(null),bd=Array(26).fill(null);
+  days.forEach((r,i)=>{const m=String(r[0]??"").match(/(\d+)/);const idx=m?+m[1]-1:i;if(idx>=0&&idx<26){d26[idx]=num(r[2]);bd[idx]=num(r[12])}});
+  return {d26,bd,pre:num(pre?.[0]?.[0]),exp:exp.map(r=>[String(r[0]??"").trim(),num(r[1])]).filter(e=>e[0]&&e[1])};
 }
 function demoData(){
   const d26=D25.map((v,i)=>i<13?Math.round(v*(1.05+Math.sin(i*1.9)*.12)*100)/100:null);
   const names="Amber Andrea Britt Cristian Dennis Emily Ilse Jasper Jorg Julian Kevin Luna Max Noëlle Peter Quinten Sem Thijs".split(" ");
-  return {d26,exp:names.map((n,i)=>[n,1480000+((i*137911)%480000)])};
+  return {d26,bd:d26.map((v,i)=>v==null?null:Math.round(v*(i<7?.55:.35))),pre:240000,exp:names.map((n,i)=>[n,1480000+((i*137911)%480000)])};
 }
 
 /* ===== Bestand (reserve) ===== */
@@ -279,6 +284,9 @@ function countdown(){
 let c1,c2,lastData=null;
 function render(data){
   lastData=data;
+  setDoel(data.pre);
+  const bdA=data.bd||[], bdI=bdA.map((v,i)=>v!=null?i:-1).filter(i=>i>=0), bdT=sum(bdA);
+  const bdRef=bdI.length&&bdI.every(i=>i<7)?["2025",sum(bdI.map(i=>BD25[i]))]:bdI.length?["2024",sum(bdI.map(i=>BD24[i]))]:null;
   const dAll=data.d26, tIdx=Math.floor((new Date(now()).setHours(0,0,0,0)-START)/864e5);
   const lastAll=dAll.reduce((a,v,i)=>v!=null?i:a,-1);
   // de dag van vandaag is nog niet af: telt mee in de omzet, maar niet in prognose, groei en klassement
@@ -300,7 +308,7 @@ function render(data){
   let mki=0;const mk=(v,lab,c="")=>`<div class="mk ${c}${X(v)>85?" r":""}${(mki++)%2?" lo":""}" style="left:${X(v)}%"><span>${lab}</span></div>`;
   if(has||partial){
     hl.innerHTML=`<div class="what">Omzet tot nu toe · ${partial?`${filled} hele dagen + vandaag t/m ${tNow}`:`${filled} van 26 dagen`}</div><div class="big">${eurC(total+pVal)}</div>
-      <div class="row"><span>t.o.v. 2025 <b class="${cls(growth)}">${pct(growth)}</b></span><span>t.o.v. 2024 <b class="${cls(total/same24-1)}">${pct(total/same24-1)}</b></span><span>${filled===26?"eindtotaal":"prognose"} <b>${eur(prog)}</b></span>${TD?`<span>doel <b>${eur(TD)}</b> · op koers <b class="${cls(total/CD[last]-1)}">${pct(total/CD[last]-1)}</b></span>`:""}${OMZET_1_4_NOV!=null?`<span>november <b>${eur(OMZET_1_4_NOV+total+pVal)}</b> van ${eur(DOEL_NOV)}</span>`:""}</div>
+      <div class="row"><span>t.o.v. 2025 <b class="${cls(growth)}">${pct(growth)}</b></span><span>t.o.v. 2024 <b class="${cls(total/same24-1)}">${pct(total/same24-1)}</b></span><span>${filled===26?"eindtotaal":"prognose"} <b>${eur(prog)}</b></span>${TD?`<span>doel <b>${eur(TD)}</b> · op koers <b class="${cls(total/CD[last]-1)}">${pct(total/CD[last]-1)}</b></span>`:""}${PRE!=null?`<span>november <b>${eur(PRE+total+pVal)}</b> van ${eur(DOEL_NOV)}</span>`:""}</div>
       <div class="prog"><div class="bar"><div class="fill" style="width:${X(total+pVal)}%"></div>${prog&&filled<26?`<div class="ghost" style="left:${X(total)}%;width:${X(prog)-X(total)}%"></div>`:""}</div>${mk(T25,"2025")}${TD?mk(TD,"doel","gold"):""}</div>`;
   }else{
     hl.innerHTML=`<div class="what">Te verslaan · eindtotaal 2025</div><div class="big">${eur(T25)}</div>
@@ -322,7 +330,7 @@ function render(data){
   const dot=c=>`<span class="mk2" style="background:${c}"></span>`;
   const doel3=[
     S(`${dot("var(--gold)")}Doel november`,eur(DOEL_NOV),"1 t/m 30 november","hl"),
-    S("Omzet 1 t/m 4 nov",OMZET_1_4_NOV!=null?eur(OMZET_1_4_NOV):"volgt","vóór de actie"),
+    S("Omzet 1 t/m 4 nov",PRE!=null?eur(PRE):"vul in bij K16","vóór de actie"),
     S("Doel BF-periode",TD?eur(TD):"volgt",TD?`${pct(TD/T25-1)} t.o.v. 2025 · ${eur(TD/26)}/dag`:"5 t/m 30 november")];
   let tiles;
   if(has)tiles=[
@@ -331,7 +339,7 @@ function render(data){
       S("Gemiddeld per dag",eur(total/filled),`2025: ${eur(same25/filled)} · <span class="${cls(growth)}">${pct(growth)}</span>`),
       S("Laatste 7 dagen",eur(s7),`<span class="${cls(s7/s7o-1)}">${pct(s7/s7o-1)}</span> vs 2025`),
       S("Beste dag",eur(d26[best]),`dag ${best+1} · ${dl(best)}`),
-      S("Zwakste dag",eur(d26[worst]),`dag ${worst+1} · ${dl(worst)}`),
+      bdI.length?S("Buitendienst 2026",eur(bdT),`${pc0(bdT/(total+pVal||1))} van totaal${bdRef?` · <span class="${cls(sum(bdI.map(i=>bdA[i]))/bdRef[1]-1)}">${pct(sum(bdI.map(i=>bdA[i]))/bdRef[1]-1)}</span> vs ${bdRef[0]}`:""}`):S("Zwakste dag",eur(d26[worst]),`dag ${worst+1} · ${dl(worst)}`),
       S("Dagen beter dan 2025",`${better} / ${filled}`,`${pc0(better/filled)} van de dagen`)]),
     G("Doelen","nog nodig per dag om te halen","sc",true,[
       S("Bereikt van 2025-totaal",pc0(total/T25),`2025 stond toen op ${pc0(C25[last]/T25)}`),
@@ -390,7 +398,7 @@ function render(data){
   /* --- mijlpalen --- */
   const reach=(c,t)=>{const i=c.findIndex(v=>v!=null&&v>=t);return i<0?null:i};
   const MS=[[250000,"€ 250.000"],[500000,"€ 500.000"],[750000,"€ 750.000"],[1e6,"€ 1 miljoen"],[1.25e6,"€ 1,25 miljoen"],[1.5e6,"€ 1,5 miljoen"],
-    [T24,"Totaal 2024 voorbij"],[T25,"Totaal 2025 voorbij"]].concat(TD?[[TD,"Doel BF-periode gehaald"]]:[]);
+    [T24,"Totaal 2024 voorbij"],[T25,"Totaal 2025 voorbij"],[TBS,"Basisscenario gehaald"]].concat(TD?[[TD,"Doel BF-periode gehaald"]]:[]);
   const events=[];
   document.getElementById("ms").innerHTML=MS.map(([t,lab])=>{const i=reach(C26,t),j=reach(C25,t);let r;
     if(i!=null){const d=j==null?null:j-i;r=`dag ${i+1}${d==null?"":d>0?` · ${d}d eerder`:d<0?` · ${-d}d later`:" · = 2025"}`;if(i===last)events.push(`Mijlpaal: ${lab}`)}
