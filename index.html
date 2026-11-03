@@ -122,16 +122,21 @@ tr.p1 td,tr.p2 td,tr.p3 td{font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--soft);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)}
 .chip b{display:block;color:var(--ink);font-family:var(--mono);font-size:13px}
-.strip{position:relative;height:84px;margin:6px 4px 0}
+.strip{position:relative;height:116px;margin:6px 4px 0}
 .strip .axis{position:absolute;left:0;right:0;top:44px;height:2px;background:var(--line)}
 .strip .p{position:absolute;top:38px;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;background:var(--y25);border:2px solid var(--surface);opacity:.85}
 .strip .p.me{background:var(--accent);opacity:1}
 .strip .p.lead{background:var(--gold);opacity:1}
-.strip .m{position:absolute;top:16px;bottom:24px;border-left:2px dashed var(--muted);font-size:10.5px;color:var(--muted);white-space:nowrap}
+.strip .m{position:absolute;top:16px;bottom:46px;border-left:2px dashed var(--muted);font-size:10.5px;color:var(--muted);white-space:nowrap}
 .strip .m span{position:absolute;top:-2px;left:4px}
 .strip .m.hi span{top:-16px}
 .strip .m.pg{border-left:2px solid var(--accent)}.strip .m.pg span{color:var(--accent);font-weight:600}
-.strip .t{position:absolute;bottom:0;font-family:var(--mono);font-size:10.5px;color:var(--muted);transform:translateX(-50%)}
+.strip .band{position:absolute;top:28px;height:32px;background:var(--band);border:1.5px solid var(--accent);border-radius:8px}
+.strip .band span{position:absolute;bottom:-50px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:600;color:var(--accent);white-space:nowrap;background:var(--surface);padding:0 4px}
+tr.out td{opacity:.45}
+.mv{font-size:11px;font-weight:700;margin-left:6px;font-family:var(--mono)}
+.mv.up{color:var(--good)}.mv.dn{color:var(--bad)}.mv.eq{color:var(--muted);font-weight:500}
+.strip .t{position:absolute;bottom:22px;font-family:var(--mono);font-size:10.5px;color:var(--muted);transform:translateX(-50%)}
 .empty{color:var(--muted);font-size:13px;padding:6px 0;margin:0}
 details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--muted)}
 summary{cursor:pointer;font-weight:600;color:var(--ink)}
@@ -182,7 +187,7 @@ summary{cursor:pointer;font-weight:600;color:var(--ink)}
     <p>De pagina leest elke minuut het Google-spreadsheet "Black Friday 2026" uit: de dagomzet in kolom C van "Dagomzet 2026" en de namen en voorspellingen in kolom A en B van "Verwachtingen 2026".</p>
     <p><b>Prognose</b> = omzet tot nu toe ÷ omzet 2025 over dezelfde dagen × eindtotaal 2025 (€ 1.595.732). Zo telt de Black Friday-piek mee.<br>
     <b>Scenario's</b> laag (−1%), basis (+6%) en hoog (+14%) komen uit de omzetverwachting van een collega.<br>
-    <b>Klassement:</b> wie het dichtst bij de eindomzet zit wint. Tijdens de actie wordt de prognose gebruikt. "Wint als" laat zien bij welke eindomzet iemand op 1 eindigt.</p>
+    <b>Klassement:</b> wie het dichtst bij de eindomzet zit wint. Tijdens de actie wordt de prognose gebruikt. "Wint als" laat zien bij welke eindomzet iemand op 1 eindigt.<br><b>Nog in de race:</b> de oranje band op de getallenlijn laat zien waar de eindomzet waarschijnlijk uitkomt (de resterende dagen met de huidige groei ±10 procentpunt). Wie daarbuiten valt, staat grijs. De band wordt smaller naarmate de actie vordert.<br><b>▲▼</b> = hoeveel plekken iemand is gestegen of gezakt sinds de vorige dag.</p>
     <p>Lukt het ophalen niet? Download het spreadsheet als .xlsx en sleep het hieronder naartoe.</p>
     <label class="drop" id="drop" for="file"><span>Sleep een .xlsx of .csv hierheen of kies een bestand.</span><span><span class="btn">Bestand kiezen</span> <button type="button" class="btn ghost" id="reset" hidden>Terug naar live</button></span><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></label>
   </details>
@@ -409,17 +414,25 @@ function render(data){
   ch.innerHTML=[["Voorspellingen",exp.length],["Gemiddeld",eurC(avgExp)],["Mediaan",eurC(medExp)],["Laagste",eurC(Math.min(...ev))],["Hoogste",eurC(Math.max(...ev))],
     ["Boven 2025-totaal",`${ev.filter(v=>v>T25).length} van ${ev.length}`]].concat(prog?[["Binnen € 25k van prognose",String(ev.filter(v=>Math.abs(v-prog)<=25000).length)]]:[])
     .map(([l,v])=>`<div class="chip">${l}<b>${v}</b></div>`).join("");
+  // kansrijke band: resterende dagen met groei ±10 procentpunt rond de huidige groei
+  let bLo=null,bHi=null,bLab="";
+  if(prog&&filled<26){const rest=T25-C25[last];bLo=total+rest*(1+growth-.10);bHi=total+rest*(1+growth+.10);bLab="nog in de race"}
+  else if(!prog){bLo=TL;bHi=TH;bLab="scenario laag–hoog"}
+  const vals=[...new Set(ev)].sort((a,b)=>a-b);
+  const wi=v=>{const i=vals.indexOf(v);return[i>0?(vals[i-1]+v)/2:-Infinity,i<vals.length-1?(v+vals[i+1])/2:Infinity]};
+  const inRace=v=>{if(bLo==null)return true;const[l,h]=wi(v);return h>=bLo&&l<=bHi};
+  const raceN=ev.filter(inRace).length;
+  if(prog&&filled<26)ch.innerHTML+=`<div class="chip">Nog in de race<b>${raceN} van ${ev.length}</b></div>`;
   // getallenlijn
-  const pool=near.concat([T25,TB],prog?[prog]:[]);
+  const pool=near.concat([T25,TB],prog?[prog]:[],bLo!=null?[bLo,bHi]:[]);
   let lo=Math.min(...pool),hi=Math.max(...pool);const pad=(hi-lo)*.06||50000;lo-=pad;hi+=pad;
   const XP=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
   const leadName=ranked[0]?.n;
   const ticks=[];const stepT=hi-lo>800000?200000:100000;for(let t=Math.ceil(lo/stepT)*stepT;t<=hi;t+=stepT)ticks.push(t);
-  st.innerHTML=`<div class="axis"></div>`+ticks.map(t=>`<span class="t" style="left:${XP(t)}%">${mln(t).replace(",00","")}</span>`).join("")+
+  st.innerHTML=(bLo!=null?`<div class="band" style="left:${XP(bLo)}%;width:${XP(bHi)-XP(bLo)}%"><span>${bLab}${prog?` · ${raceN} van ${ev.length}`:""}</span></div>`:"")+`<div class="axis"></div>`+ticks.map(t=>`<span class="t" style="left:${XP(t)}%">${mln(t).replace(",00","")}</span>`).join("")+
     `<div class="m" style="left:${XP(T25)}%"><span>2025</span></div><div class="m" style="left:${XP(TB)}%"><span>basis</span></div>`+
     (prog?`<div class="m pg hi" style="left:${XP(prog)}%"><span>${filled===26?"eind":"prognose"}</span></div>`:"")+
     exp.map(([n,v])=>`<span class="p${n===leadName?" lead":""}" style="left:${XP(v)}%" title="${esc(n)}: ${eurC(v)}"></span>`).join("");
-  const vals=[...new Set(ev)].sort((a,b)=>a-b);
   const win=v=>{if(vals.length===1)return"altijd (enige voorspelling)";const i=vals.indexOf(v),l=i>0?(vals[i-1]+v)/2:null,h=i<vals.length-1?(v+vals[i+1])/2:null;
     return l==null?`onder ${kE(h)}`:h==null?`boven ${kE(l)}`:`${kE(l)} – ${kE(h)}`};
   const shared=v=>ev.filter(x=>x===v).length>1;
@@ -429,10 +442,14 @@ function render(data){
     const srt=[...exp].sort((a,b)=>a[1]-b[1]);
     bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil met vorige</th><th>Wint als eindomzet</th></tr></thead><tbody>${srt.map(([n,v],i)=>`<tr><td>${esc(n)}</td><td class="num">${eurC(v)}</td><td class="num">${gap(v,srt[i-1]?.[1])}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
     return}
-  tg.innerHTML=`vergeleken met ${filled===26?"eindomzet":"prognose"} ${eurC(prog)}`;
+  const rankMap=(target)=>{const r=exp.map(([n,v])=>({n,d:Math.abs(v-target)})).sort((a,b)=>a.d-b.d);const m={};let p=0,pv=null;r.forEach((x,i)=>{if(x.d!==pv){p=i+1;pv=x.d}m[x.n]=p});return m};
+  let prevPos=null;
+  if(filled>=2){const d0=d26.slice();d0[last]=null;const i0=idx.slice(0,-1),t0=sum(d0),s0=sum(i0.map(i=>D25[i]));if(s0)prevPos=rankMap(t0/s0*T25)}
+  const mv=(n,p)=>{if(!prevPos||prevPos[n]==null)return"";const d=prevPos[n]-p;return d>0?`<span class="mv up" title="${d} plek(ken) gestegen sinds gisteren">▲${d}</span>`:d<0?`<span class="mv dn" title="${-d} plek(ken) gezakt sinds gisteren">▼${-d}</span>`:`<span class="mv eq" title="gelijk gebleven">–</span>`};
+  tg.innerHTML=`vergeleken met ${filled===26?"eindomzet":"prognose"} ${eurC(prog)}${prevPos?" · ▲▼ = t.o.v. gisteren":""}${filled<26?" · grijs = buiten de race":""}`;
   let pos=0,prev=null;
   bd.innerHTML=`<table><thead><tr><th></th><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil</th><th class="num">Afwijking</th><th class="num">t.o.v. plek erboven</th><th>Wint als eindomzet</th></tr></thead><tbody>${ranked.map((r,i)=>{if(Math.abs(r.d)!==prev){pos=i+1;prev=Math.abs(r.d)}
-    return `<tr class="${pos<=3?"p"+pos:""}${pos===1?" lead":""}"><td><span class="rank">${pos}</span></td><td>${esc(r.n)}</td><td class="num">${eurC(r.v)}</td><td class="num ${cls(r.d)}">${r.d>=0?"+":"−"}${eurC(Math.abs(r.d)).slice(2)}</td><td class="num">${(Math.abs(r.d)/prog*100).toLocaleString("nl-NL",{maximumFractionDigits:1})}%</td><td class="num">${gap(r.v,ranked[i-1]?.v)}</td><td class="win">${win(r.v)}${shared(r.v)?" (gedeeld)":""}</td></tr>`}).join("")}</tbody></table>`;
+    return `<tr class="${pos<=3?"p"+pos:""}${pos===1?" lead":""}${inRace(r.v)?"":" out"}"><td><span class="rank">${pos}</span></td><td>${esc(r.n)}${mv(r.n,pos)}</td><td class="num">${eurC(r.v)}</td><td class="num ${cls(r.d)}">${r.d>=0?"+":"−"}${eurC(Math.abs(r.d)).slice(2)}</td><td class="num">${(Math.abs(r.d)/prog*100).toLocaleString("nl-NL",{maximumFractionDigits:1})}%</td><td class="num">${gap(r.v,ranked[i-1]?.v)}</td><td class="win">${win(r.v)}${shared(r.v)?" (gedeeld)":""}</td></tr>`}).join("")}</tbody></table>`;
 }
 
 /* ===== Verversen ===== */
