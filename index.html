@@ -137,6 +137,21 @@ tr.out td{opacity:.45}
 .mv{font-size:11px;font-weight:700;margin-left:6px;font-family:var(--mono)}
 .mv.up{color:var(--good)}.mv.dn{color:var(--bad)}.mv.eq{color:var(--muted);font-weight:500}
 .strip .t{position:absolute;bottom:22px;font-family:var(--mono);font-size:10.5px;color:var(--muted);transform:translateX(-50%)}
+.share{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#copytxt{width:100%;min-height:150px;font:13px var(--mono);border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--soft);color:var(--ink)}
+.final{background:var(--hero);color:var(--hero-ink);border-radius:14px;padding:22px;display:grid;gap:16px}
+.final h2{font-size:1.6rem;color:var(--gold)}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;align-items:end}
+.pd{border-radius:12px 12px 6px 6px;padding:14px;display:grid;gap:4px;text-align:center}
+.pd .pl{font-family:var(--display);font-stretch:75%;font-weight:900;font-size:2.4rem;line-height:1}
+.pd .nm{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:1.7rem}
+.pd .vv{font-family:var(--mono);font-size:13px}
+.pd.pp1{background:rgba(245,197,66,.2);border:2px solid var(--gold);min-height:210px}
+.pd.pp2{background:rgba(207,211,218,.14);border:2px solid var(--silver);min-height:170px}
+.pd.pp3{background:rgba(230,167,122,.15);border:2px solid var(--bronze);min-height:140px}
+.final .row{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px;color:var(--hero-muted)}
+.final .row b{color:var(--hero-ink)}
+@media (max-width:820px){.podium{grid-template-columns:1fr}.pd{min-height:0!important}}
 .empty{color:var(--muted);font-size:13px;padding:6px 0;margin:0}
 details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--muted)}
 summary{cursor:pointer;font-weight:600;color:var(--ink)}
@@ -160,6 +175,7 @@ summary{cursor:pointer;font-weight:600;color:var(--ink)}
     <div id="heroL"></div>
     <div class="right" id="heroR"></div>
   </section>
+  <section id="final" hidden></section>
   <section id="event" hidden></section>
 
   <section class="stats" id="stats"></section>
@@ -177,6 +193,9 @@ summary{cursor:pointer;font-weight:600;color:var(--ink)}
 
   <section class="panel">
     <div class="ph"><h2>Voorspellingen &amp; klassement</h2><span class="note" id="target"></span></div>
+    <div class="share"><button type="button" class="btn" id="copy">Kopieer WhatsApp-update</button><span class="note" id="copymsg"></span></div>
+    <textarea id="copytxt" readonly hidden></textarea>
+    <div id="rkwrap" hidden><div class="ph"><h2 style="font-size:.85rem">Verloop top 5</h2><span class="note">plek per dag · 1 = bovenaan</span></div><div class="chartbox" style="height:200px"><canvas id="c3" aria-label="Verloop van de plek van de top 5"></canvas></div></div>
     <div class="chips" id="chips"></div>
     <div class="strip" id="strip"></div>
     <div class="table-scroll" id="board"></div>
@@ -454,6 +473,7 @@ function render(data){
   const shared=v=>ev.filter(x=>x===v).length>1;
   const gap=(v,o)=>o==null?"–":`${v>=o?"+":"−"} ${eurC(Math.abs(v-o))} <span class="note">(${pct(v/o-1)})</span>`;
   if(!prog){
+    UPD=[`📊 *Black Friday 2026*`,``,`${exp.length} voorspellingen binnen · gemiddeld ${eur(sum(ev)/ev.length)}`,TD?`🎯 Doel actie (5 t/m 30 nov): *${eur(TD)}*`:null,`🚀 Start: donderdag 5 november`,``,`Bekijk alle voorspellingen: ${location.href.split("?")[0]}`].filter(x=>x!==null).join("\n");
     tg.textContent="op volgorde van voorspelling";
     const srt=[...exp].sort((a,b)=>a[1]-b[1]);
     bd.innerHTML=`<table><thead><tr><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil met vorige</th><th>Wint als eindomzet</th></tr></thead><tbody>${srt.map(([n,v],i)=>`<tr><td>${esc(n)}</td><td class="num">${eurC(v)}</td><td class="num">${gap(v,srt[i-1]?.[1])}</td><td class="win">${win(v)}${shared(v)?" (gedeeld)":""}</td></tr>`).join("")}</tbody></table>`;
@@ -466,9 +486,57 @@ function render(data){
   let pos=0,prev=null;
   bd.innerHTML=`<table><thead><tr><th></th><th>Naam</th><th class="num">Voorspelling</th><th class="num">Verschil</th><th class="num">Afwijking</th><th class="num">t.o.v. plek erboven</th><th>Wint als eindomzet</th></tr></thead><tbody>${ranked.map((r,i)=>{if(Math.abs(r.d)!==prev){pos=i+1;prev=Math.abs(r.d)}
     return `<tr class="${pos<=3?"p"+pos:""}${pos===1?" lead":""}${inRace(r.v)?"":" out"}"><td><span class="rank">${pos}</span></td><td>${esc(r.n)}${mv(r.n,pos)}</td><td class="num">${eurC(r.v)}</td><td class="num ${cls(r.d)}">${r.d>=0?"+":"−"}${eurC(Math.abs(r.d)).slice(2)}</td><td class="num">${(Math.abs(r.d)/prog*100).toLocaleString("nl-NL",{maximumFractionDigits:1})}%</td><td class="num">${gap(r.v,ranked[i-1]?.v)}</td><td class="win">${win(r.v)}${shared(r.v)?" (gedeeld)":""}</td></tr>`}).join("")}</tbody></table>`;
+
+  /* --- eindstand met podium (na dag 26) --- */
+  const fin=document.getElementById("final");
+  const posOf=rankMap(prog);const top3=ranked.slice(0,3);
+  if(filled===26&&top3.length){
+    const pd=(r,n)=>r?`<div class="pd pp${n}"><span class="pl">${n}</span><span class="nm">${esc(r.n)}</span><span class="vv">voorspelde ${eurC(r.v)}</span><span class="vv">${eurC(Math.abs(r.d))} ${r.d>=0?"te hoog":"te laag"}</span></div>`:"<div></div>";
+    fin.hidden=false;fin.className="final";
+    fin.innerHTML=`<h2>Eindstand Black Friday 2026</h2><div class="podium">${pd(top3[1],2)}${pd(top3[0],1)}${pd(top3[2],3)}</div>
+      <div class="row"><span>eindomzet <b>${eurC(total)}</b></span><span>t.o.v. 2025 <b>${pct(total/T25-1)}</b></span>${TD?`<span>t.o.v. doel <b>${pct(total/TD-1)}</b></span>`:""}${PRE!=null?`<span>november <b>${eur(PRE+total)}</b> van ${eur(DOEL_NOV)}</span>`:""}</div>`;
+  }else fin.hidden=true;
+
+  /* --- verloop top 5 --- */
+  const rw=document.getElementById("rkwrap");
+  if(filled>=2&&ranked.length>=2){
+    rw.hidden=false;
+    const days=idx.map((_,k)=>idx.slice(0,k+1));
+    const hist=days.map(ii=>{const t=sum(ii.map(i=>d26[i])),s0=sum(ii.map(i=>D25[i]));return rankMap(t/s0*T25)});
+    const names=ranked.slice(0,5).map(r=>r.n), cols=[css("--gold"),css("--silver"),css("--bronze"),A,Y5];
+    const ds3=names.map((n,k)=>({label:n,data:hist.map(h=>h[n]),borderColor:cols[k],backgroundColor:cols[k],borderWidth:k<3?3:2,pointRadius:3,tension:.2}));
+    const maxP=Math.min(exp.length,Math.max(5,...ds3.flatMap(d=>d.data)));
+    if(window.rkChart)window.rkChart.destroy();
+    window.rkChart=new Chart(document.getElementById("c3"),{type:"line",data:{labels:idx.map(i=>`dag ${i+1}`),datasets:ds3},options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{position:"right",labels:{color:M,boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: plek ${c.parsed.y}`}}},
+      scales:{y:{reverse:true,min:1,max:maxP,ticks:{stepSize:1,color:M,font:{family:"IBM Plex Mono",size:10}},grid:{color:L}},x:{grid:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:10}}}}}});
+  }else rw.hidden=true;
+
+  /* --- WhatsApp-update --- */
+  const medal=["🥇","🥈","🥉"];
+  const nowTxt=new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"});
+  UPD=[
+    filled===26?`🏁 *Black Friday 2026 – eindstand*`:`📊 *Black Friday 2026 – stand na dag ${filled}* (${dl(last)})`,
+    ``,
+    `💶 Omzet${filled===26?"":" tot nu toe"}: *${eur(total)}*${partial?` (+ ${eur(pVal)} vandaag t/m ${nowTxt})`:""}`,
+    `📈 T.o.v. vorig jaar: *${pct(growth)}*`,
+    filled<26?`🔮 Verwachte eindomzet: *${eur(prog)}*`:null,
+    TD?`🎯 Doel actie ${eur(TD)}: ${filled===26?`*${pct(total/TD-1)}*`:`op koers *${pct(total/CD[last]-1)}*`}`:null,
+    d26[last]>162992.65?`🎉 Nieuw dagrecord: *${eur(d26[last])}*!`:null,
+    bdI.length?`🚗 Buitendienst: *${eur(bdT)}*`:null,
+    ``,
+    filled===26?`🏆 *Winnaars:*`:`🏆 *Klassement:*`,
+    ...ranked.slice(0,5).map((r,i)=>`${medal[i]||`${posOf[r.n]}.`} ${r.n} – ${eurC(r.v)}${prevPos&&filled<26?(()=>{const d=prevPos[r.n]-posOf[r.n];return d>0?` ▲${d}`:d<0?` ▼${-d}`:""})():""}`),
+    ``,
+    filled<26?`Volledige stand: ${location.href.split("?")[0]}`:`Gefeliciteerd ${top3[0]?.n}! 🎊`
+  ].filter(x=>x!==null).join("\n");
 }
 
 /* ===== Verversen ===== */
+let UPD="";
+document.getElementById("copy").addEventListener("click",async()=>{const m=document.getElementById("copymsg"),ta=document.getElementById("copytxt");ta.value=UPD;
+  try{await navigator.clipboard.writeText(UPD);m.textContent="Gekopieerd! Plak het in WhatsApp.";ta.hidden=true}
+  catch(e){ta.hidden=false;ta.focus();ta.select();m.textContent="Kopiëren lukte niet automatisch: de tekst staat hieronder geselecteerd, druk op Ctrl/Cmd+C."}});
 let manual=false;
 async function load(){
   if(manual)return;
